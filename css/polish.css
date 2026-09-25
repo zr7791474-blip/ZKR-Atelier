@@ -47,7 +47,7 @@
     linear-gradient(var(--accent),var(--accent)) 100% 100% / 1px 30px no-repeat !important;
 }
 .template-card.active, .item-card.active { border-left-color: var(--accent) !important; }
-.meter-fill { background: linear-gradient(90deg, var(--accent-2), var(--accent)) !important; }
+.meter-fill { background: var(--accent-2); }
 
 /* ============================================================
    LEFT CATALOG — compact thumbnail-card grid
@@ -133,9 +133,13 @@
 
 /* ---------- Top-bar utility cluster (Layers / Fullscreen / Help) ---------- */
 .topbar-util-group { display: flex; align-items: center; gap: 3px; }
-.topbar-util-btn { width: 28px; height: 28px; border-radius: 6px; }
+.topbar-util-btn { width: 28px; height: 28px; border-radius: 6px; background: transparent; border-color: transparent; }
 .topbar-util-btn:hover { background: rgba(23,182,196,0.14); }
 .topbar-util-btn:active { transform: scale(0.92); }
+.topbar .panel-toggle { background: transparent; border-color: transparent; color: #C7CEDA; }
+.topbar .panel-toggle:hover { background: rgba(244,239,229,0.12); color: #FAF7F0; }
+#notifBtn { background: transparent; border-color: transparent; }
+#notifBtn:hover { background: rgba(244,239,229,0.12); }
 /* Hiding threshold consolidated below in the responsive section (now 1400px,
    not 1180px — see that section's comment for why the old value left a
    band where nothing fit). */
@@ -198,30 +202,20 @@
 }
 .icon-rail-btn:active { transform: scale(0.92); }
 
-/* ---------- Buttons: slightly richer primary/accent states ---------- */
-.btn-primary { background: linear-gradient(180deg, #16304C, #0E1B2C); box-shadow: 0 1px 0 rgba(255,255,255,0.06) inset; }
-.btn-primary:hover { background: linear-gradient(180deg, #1d3c5c, #14263c); box-shadow: 0 4px 14px rgba(14,27,44,0.28), 0 1px 0 rgba(255,255,255,0.08) inset; }
-.btn-accent { background: linear-gradient(180deg, var(--accent), var(--accent-2)); }
-.btn-accent:hover { background: linear-gradient(180deg, #D2864B, var(--accent-2)); box-shadow: 0 4px 14px rgba(var(--accent-rgb), 0.32); }
-.btn:active, .btn-icon:active, .tool-btn:active { transform: scale(0.94) !important; }
+/* ---------- Buttons: flat, precise fills (no gradients/glow) ---------- */
+.btn:active, .btn-icon:active, .tool-btn:active { transform: scale(0.96); }
 
-/* ---------- Template & item cards: more presence, clearer selection ---------- */
-.template-card, .item-card { transition: border-color 0.16s ease, background 0.16s ease, box-shadow 0.16s ease, transform 0.16s ease; }
-.template-card:hover, .item-card:hover { transform: translateY(-1px); box-shadow: 0 4px 10px rgba(14,27,44,0.08); }
-.template-card.active { box-shadow: 0 4px 14px rgba(var(--accent-rgb), 0.16), inset 3px 0 0 var(--accent); }
-.item-card.active { box-shadow: 0 3px 10px rgba(var(--accent-rgb), 0.14); }
-.item-icon { transition: background 0.16s ease, color 0.16s ease, transform 0.16s ease; }
-.item-card:hover .item-icon { transform: scale(1.06); }
+/* ---------- Template & item cards: clearer selection via border + fill, not shadow ---------- */
+.template-card, .item-card { transition: border-color 0.16s ease, background 0.16s ease; }
+.template-card.active { box-shadow: inset 3px 0 0 var(--accent); }
+.item-icon { transition: background 0.16s ease, color 0.16s ease; }
 
-/* ---------- Swatches: a touch of depth so they don't look flat ---------- */
-.swatch { box-shadow: 0 1px 3px rgba(14,27,44,0.18), inset 0 0 0 1px rgba(255,255,255,0.25); }
-.swatch:hover { transform: scale(1.1); }
-.swatch.active { box-shadow: 0 2px 6px rgba(14,27,44,0.28), inset 0 0 0 1px rgba(255,255,255,0.35); }
+/* ---------- Swatches ---------- */
+.swatch { box-shadow: inset 0 0 0 1px rgba(255,255,255,0.25); }
+.swatch:hover { transform: scale(1.06); }
 
 /* ---------- Lighting presets: read as a mood picker, not a form grid ---------- */
-.light-preset-btn { position: relative; overflow: hidden; }
-.light-preset-btn:hover { transform: translateY(-1px); box-shadow: 0 3px 8px rgba(14,27,44,0.10); }
-.light-preset-btn.active { box-shadow: 0 3px 10px rgba(14,27,44,0.22); }
+.light-preset-btn { position: relative; }
 .light-preset-btn[data-preset="night"].active, .light-preset-btn[data-preset="bluehour"].active { background: #1B2C46; border-color: #1B2C46; }
 .light-preset-btn[data-preset="golden"].active, .light-preset-btn[data-preset="evening"].active { background: var(--accent-2); border-color: var(--accent-2); }
 .light-preset-btn[data-preset="live"] i { color: var(--success); }
@@ -253,7 +247,6 @@
   transition: width 0.4s ease;
 }
 .score-ring-row { padding-top: 2px; }
-.score-ring-fill { filter: drop-shadow(0 0 3px rgba(var(--accent-rgb), 0.35)); }
 
 
 /* ---------- Compliance rows: color-coded left edge instead of icon-only ---------- */
@@ -287,9 +280,7 @@
 /* ---------- Toast: a little more presence ---------- */
 .toast { box-shadow: 0 10px 28px rgba(0,0,0,0.28), 0 0 0 1px rgba(255,255,255,0.06) inset; }
 
-/* ---------- Notification dot: gentle pulse so it reads as "new", not static ---------- */
-.notif-dot { animation: notifPulse 2.2s ease-in-out infinite; }
-@keyframes notifPulse { 0%, 100% { box-shadow: 0 0 0 2px #0E1B2C; } 50% { box-shadow: 0 0 0 4px rgba(23,182,196,0.35); } }
+
 
 /* ---------- Custom scrollbars everywhere scrollable, not just two spots ---------- */
 * { scrollbar-width: thin; scrollbar-color: var(--oat-dark) transparent; }
@@ -328,6 +319,15 @@
    rest of the app degrades — nothing to scroll to, nothing to hide behind
    a fake scrollbar-less scroll container. */
 html, body { overflow-x: hidden; }
+@media (max-width: 1200px) {
+  .hud-tr .flex.items-center.gap-3 > span:first-child > span:last-child,
+  .hud-tr .flex.items-center.gap-3 > span:nth-child(2) { display: none; }
+  .hud-tl .flex.items-center.gap-3 > div:last-child,
+  .hud-tl .flex.items-center.gap-3 > .h-7:last-of-type { display: none; }
+  .hud-tl, .hud-tr { padding: 7px 10px; }
+  .hud-tl .gap-3, .hud-tr .gap-3 { gap: 8px; }
+  .viewport-readout { display: none; }
+}
 @media (max-width: 1550px) {
   .topbar .nav-action span { display: none; }
   .topbar .nav-action { padding: 6px 9px; }
@@ -392,24 +392,13 @@ html, body { overflow-x: hidden; }
 @media (prefers-reduced-motion: no-preference) { .dimension-label.visible { animation: dimIn 0.12s ease-out; } }
 @keyframes dimIn { from { opacity: 0; transform: translate(-50%, 0); } to { opacity: 1; transform: translate(-50%, 4px); } }
 
-/* ---------- Glass floating-panel treatment ----------
-   Reference uses panels that read as translucent cards floating over the
-   3D canvas rather than flush opaque docked sidebars. Kept as a visual
-   layer only — same grid columns, same panel widths, same scroll
-   containers — so nothing about the responsive drawer system or layout
-   math changes, only how the panel surface itself is painted. */
-.panel-left, .panel-right {
-  background: rgba(248, 245, 239, 0.86);
-  backdrop-filter: blur(14px) saturate(1.1);
-  -webkit-backdrop-filter: blur(14px) saturate(1.1);
-}
-.panel-right { border-left: 1px solid rgba(255,255,255,0.4); box-shadow: -8px 0 24px rgba(14,27,44,0.06); }
-.panel-left { border-right: 1px solid rgba(255,255,255,0.4); box-shadow: 8px 0 24px rgba(14,27,44,0.06); }
-@media (max-width: 900px) {
-  /* Mobile drawers already need full opacity to read as a real overlay
-     over the canvas behind them; blur stays for desktop/tablet only. */
-  .panel-left, .panel-right { background: var(--surface); backdrop-filter: none; -webkit-backdrop-filter: none; }
-}
+/* ---------- Side panels: one solid surface, no glass effect ----------
+   A translucent/blurred panel over the 3D canvas looked "premium" in
+   isolation but fought legibility against the dense data these panels
+   hold, and needed its own mobile override just to turn back off.
+   Reverted to the same opaque --surface used everywhere else in the app. */
+.panel-right { box-shadow: -8px 0 24px rgba(14,27,44,0.05); }
+.panel-left { box-shadow: 8px 0 24px rgba(14,27,44,0.05); }
 
 /* ---------- Catalog: collapsible category sections ----------
    Additive — JS groups the same ITEM_CATALOG entries into these section

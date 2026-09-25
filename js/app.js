@@ -7,6 +7,10 @@ import { SSAOPass } from 'three/addons/postprocessing/SSAOPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutlinePass } from 'three/addons/postprocessing/OutlinePass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { bus } from './bus.js';
+import { MIN_ACCESSIBLE_CLEARANCE, COLLISION_BUFFER, NON_FLOOR_TYPES, analyzeLayout, footprintOf, footprintClearance } from './spatial-analysis.js';
+import { ws, clearIssue } from './ws.js';
+import { initWorkspace } from './workspace.js';
 
 // ========== MATERIAL LIBRARY ==========
 // One shared, named set of materials so every factory draws from the same
@@ -147,11 +151,9 @@ function applyLanguage(lang, opts = {}) {
   }
 }
 
-// Standard minimum accessible aisle/clearance width, in meters. Declared
-// once here rather than duplicated as a local constant in both the
-// accessibility check (updateStats) and the measurement tool, so a future
-// change to the compliance standard only needs to happen in one place.
-const MIN_ACCESSIBLE_CLEARANCE = 0.9;
+// MIN_ACCESSIBLE_CLEARANCE (and the other clearance thresholds) now live in
+// spatial-analysis.js — one source of truth for the compliance card, the 3D
+// overlay, the measure tool and the report.
 
 // ========== STATE ==========
 const state = {
@@ -2933,6 +2935,7 @@ function getBuildPlotIntersection(e) {
 }
 
 let ghostRadius = 0.4;
+let ghostSelf = null;   // true footprint of the placement preview (type, dims, rotation)
 let ghostInvalid = false;
 container.addEventListener('mousemove', (e) => {
   if (!state.selectedItem) return;
@@ -2950,9 +2953,10 @@ container.addEventListener('mousemove', (e) => {
     });
     scene.add(ghostItem);
     ghostRadius = getFootprintRadius(ghostItem);
+    ghostSelf = { type: state.selectedItem, dims: getFootprintDims(ghostItem), rotation: 0 };
   }
-  const clamped = clampToRoom(hit.point.x, hit.point.z, ghostRadius);
-  const colliding = !!findCollidingItem(clamped.x, clamped.z, ghostRadius, null);
+  const clamped = clampToRoom(hit.point.x, hit.point.z, ghostRadius, ghostSelf);
+  const colliding = !!findCollidingItem(clamped.x, clamped.z, ghostRadius, null, ghostSelf);
   ghostInvalid = colliding;
   ghostItem.position.set(clamped.x, 0, clamped.z);
   setGhostValidity(!colliding);
@@ -3020,73 +3024,23 @@ function updateFloorPlanLabels() {
 }
 
 // ========== MEASUREMENT TOOL ==========
-let measureMode = false;
-let measurePoints = [];
-let measureLine = null;
-let measureMarkers = [];
-let measureLabel = null;
-function clearMeasurement() {
-  measurePoints = [];
-  if (measureLine) { scene.remove(measureLine); measureLine.geometry.dispose(); measureLine.material.dispose(); measureLine = null; }
-  measureMarkers.forEach(m => { scene.remove(m); m.geometry.dispose(); m.material.dispose(); });
-  measureMarkers = [];
-  if (measureLabel) { measureLabel.remove(); measureLabel = null; }
-}
-function toggleMeasureMode(force) {
-  measureMode = force !== undefined ? force : !measureMode;
-  clearMeasurement();
-  container.classList.toggle('measure-mode', measureMode);
-  if (measureMode) { deselectActiveItem(); if (state.selectedItem) selectItem(state.selectedItem); }
-  showToast(measureMode ? 'Click two points on the floor to measure' : 'Measure tool off', 'fa-ruler');
-  const btn = document.getElementById('measureToggleBtn');
-  if (btn) btn.classList.toggle('active', measureMode);
-}
-function addMeasurePoint(point) {
-  if (measurePoints.length >= 2) clearMeasurement();
-  const marker = new THREE.Mesh(new THREE.SphereGeometry(0.06, 12, 12), new THREE.MeshBasicMaterial({ color: 0x17B6C4 }));
-  marker.position.set(point.x, 0.03, point.z);
-  scene.add(marker);
-  measureMarkers.push(marker);
-  measurePoints.push(point.clone());
-  if (measurePoints.length === 2) {
-    const [a, b] = measurePoints;
-    const dist = Math.hypot(b.x - a.x, b.z - a.z);
+// Lives in js/measure.js (multiple persistent measurements, snapping, live
+// preview). Created by initWorkspace(); reachable as ws.ctx.measure.
 
-    // Same three-tier read as the Accessibility compliance card: fully
-    // compliant, tight-but-passable (the 0.55x factor used there for an
-    // existing placed layout), or a hard violation — one shared rule
-    // (MIN_ACCESSIBLE_CLEARANCE) surfaced consistently in both places
-    // instead of the measurement tool inventing its own thresholds.
-    let status, color;
-    if (dist >= MIN_ACCESSIBLE_CLEARANCE) { status = 'compliant'; color = 0x4C8B5A; }
-    else if (dist >= MIN_ACCESSIBLE_CLEARANCE * 0.55) { status = 'tight'; color = 0xD6A94A; }
-    else { status = 'violation'; color = 0xC43A3A; }
-
-    measureMarkers.forEach(m => m.material.color.setHex(color));
-    const geo = new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(a.x, 0.03, a.z), new THREE.Vector3(b.x, 0.03, b.z),
-    ]);
-    measureLine = new THREE.Line(geo, new THREE.LineDashedMaterial({ color, dashSize: 0.12, gapSize: 0.08, linewidth: 2 }));
-    measureLine.computeLineDistances();
-    scene.add(measureLine);
-    measureLabel = document.createElement('div');
-    measureLabel.className = 'measure-label measure-label--' + status;
-    document.body.appendChild(measureLabel);
-    const statusText = status === 'compliant' ? t('measure.compliant') : status === 'tight' ? t('measure.tight') : t('measure.violation');
-    measureLabel.innerHTML = `<b>${dist.toFixed(2)} m</b><span>${statusText}</span>`;
-  }
-}
+// A click that follows an orbit/pan drag is not a click on the scene. Without
+// this, releasing the mouse after orbiting placed items / selected / measured.
+let _downPos = null;
+container.addEventListener('pointerdown', (e) => { _downPos = { x: e.clientX, y: e.clientY }; }, true);
+const wasDrag = (e) => !!_downPos && Math.hypot(e.clientX - _downPos.x, e.clientY - _downPos.y) > 6;
 
 container.addEventListener('click', (e) => {
   if (e.target.closest('.hud, .city-ops, .city-stat-ribbon, .city-district-strip')) return;
   const canvasRect = renderer.domElement.getBoundingClientRect();
   const isWithinCanvas = e.clientX >= canvasRect.left && e.clientX <= canvasRect.right && e.clientY >= canvasRect.top && e.clientY <= canvasRect.bottom;
   if (!isWithinCanvas) return;
-  if (measureMode) {
-    const hit = getMouseIntersection(e);
-    if (hit) addMeasurePoint(hit.point);
-    return;
-  }
+  if (wasDrag(e)) return;
+  if (ws.ctx?.measure.active) { ws.ctx.measure.click(e); return; }
+  if (ws.mode === 'present') return; // presentation: the scene is for looking at
   if (state.cityBuildMode) {
     const plot = getBuildPlotIntersection(e);
     if (plot) constructCityBuilding(plot);
@@ -3127,34 +3081,67 @@ function getFootprintRadius(mesh) {
   const size = box.getSize(new THREE.Vector3());
   return Math.max(0.28, Math.max(size.x, size.z) / 2);
 }
-function clampToRoom(x, z, radius) {
+// Real footprint of a freshly built (unrotated, unscaled) mesh in its local
+// frame: width (x), depth (z), height (y) and the footprint centre offset.
+// Stored on every placed item so the inspector, the clearance analysis and
+// the report all read the same true dimensions instead of a circle radius.
+function getFootprintDims(mesh) {
+  const box = new THREE.Box3().setFromObject(mesh);
+  const size = box.getSize(new THREE.Vector3());
+  const ctr = box.getCenter(new THREE.Vector3());
+  return { w: size.x, d: size.z, h: size.y, cx: ctr.x, cz: ctr.z };
+}
+function clampToRoom(x, z, radius, self) {
+  // With a true footprint (self = {type, dims, rotation}) the item may sit
+  // right against a wall: its real extents are kept inside the room, instead of
+  // a circle margin that pushed long items (a 3 m counter) ~1.5 m off the wall.
+  if (self && self.dims) {
+    const fp = footprintOf({ type: self.type, dims: self.dims, rotation: self.rotation || 0, position: { x: 0, z: 0 } });
+    const pts = fp.kind === 'circle' ? [{ x: fp.cx - fp.r, z: fp.cz - fp.r }, { x: fp.cx + fp.r, z: fp.cz + fp.r }] : fp.pts;
+    const xs = pts.map(p => p.x), zs = pts.map(p => p.z);
+    return {
+      x: Math.max(-ROOM_W / 2 - Math.min(...xs), Math.min(ROOM_W / 2 - Math.max(...xs), x)),
+      z: Math.max(-ROOM_D / 2 - Math.min(...zs), Math.min(ROOM_D / 2 - Math.max(...zs), z)),
+    };
+  }
   const m = Math.max(0.3, radius);
   return {
     x: Math.max(-ROOM_W / 2 + m, Math.min(ROOM_W / 2 - m, x)),
     z: Math.max(-ROOM_D / 2 + m, Math.min(ROOM_D / 2 - m, z)),
   };
 }
-function findCollidingItem(x, z, radius, excludeId) {
-  const buffer = 0.08;
+// Placement/move collision uses the SAME footprint test as the compliance
+// analysis (spatial-analysis.js): a candidate collides when its footprint is
+// closer than COLLISION_BUFFER (0.08 m) to another floor object's real
+// footprint. `self` ({type, dims, rotation}) gives the candidate its own true
+// footprint; without it the candidate is treated as a circle of `radius`.
+// Ceiling pendants, rugs and wall art never block placement (they are not
+// floor obstacles) — previously a table could not be placed on a rug.
+function findCollidingItem(x, z, radius, excludeId, self) {
+  if (self && NON_FLOOR_TYPES.has(self.type)) return null;
+  const cand = self && self.dims
+    ? footprintOf({ type: self.type, dims: self.dims, rotation: self.rotation || 0, position: { x, z } })
+    : { kind: 'circle', cx: x, cz: z, r: radius };
   for (const p of state.placedItems) {
     if (excludeId != null && p.id === excludeId) continue;
-    const pr = p.footprintRadius || 0.4;
-    const dx = x - p.position.x, dz = z - p.position.z;
-    if (Math.sqrt(dx * dx + dz * dz) < radius + pr + buffer) return p;
+    if (NON_FLOOR_TYPES.has(p.type)) continue;
+    const fp = footprintOf(p);
+    if (Math.hypot(fp.cx - cand.cx, fp.cz - cand.cz) > fp.r + cand.r + COLLISION_BUFFER) continue; // cheap reject
+    if (footprintClearance(cand, fp).clearance < COLLISION_BUFFER) return p;
   }
   return null;
 }
 // Spiral outward from the requested point looking for a clash-free, in-room
 // spot. Returns null if nothing opens up nearby (room too full there).
-function findNearestValidSpot(x, z, radius, excludeId, maxRadius = 2.4) {
-  const c0 = clampToRoom(x, z, radius);
-  if (!findCollidingItem(c0.x, c0.z, radius, excludeId)) return c0;
+function findNearestValidSpot(x, z, radius, excludeId, maxRadius = 2.4, self) {
+  const c0 = clampToRoom(x, z, radius, self);
+  if (!findCollidingItem(c0.x, c0.z, radius, excludeId, self)) return c0;
   const steps = 14;
   for (let r = 0.3; r <= maxRadius; r += 0.3) {
     for (let i = 0; i < steps; i++) {
       const angle = (i / steps) * Math.PI * 2;
-      const c = clampToRoom(x + Math.cos(angle) * r, z + Math.sin(angle) * r, radius);
-      if (!findCollidingItem(c.x, c.z, radius, excludeId)) return c;
+      const c = clampToRoom(x + Math.cos(angle) * r, z + Math.sin(angle) * r, radius, self);
+      if (!findCollidingItem(c.x, c.z, radius, excludeId, self)) return c;
     }
   }
   return null;
@@ -3205,8 +3192,8 @@ container.addEventListener('mousemove', (e) => {
   const hit = getMouseIntersection(e);
   if (!hit) return;
   const radius = movingItem.footprintRadius || 0.4;
-  const clamped = clampToRoom(hit.point.x, hit.point.z, radius);
-  moveValid = !findCollidingItem(clamped.x, clamped.z, radius, movingItem.id);
+  const clamped = clampToRoom(hit.point.x, hit.point.z, radius, movingItem);
+  moveValid = !findCollidingItem(clamped.x, clamped.z, radius, movingItem.id, movingItem);
   movingItem.mesh.position.set(clamped.x, 0, clamped.z);
   if (selectionRing) {
     selectionRing.position.set(clamped.x, 0.015, clamped.z);
@@ -3221,7 +3208,7 @@ window.addEventListener('mouseup', () => {
   const radius = item.footprintRadius || 0.4;
   const from = { x: item.position.x, z: item.position.z };
   const wantPos = { x: item.mesh.position.x, z: item.mesh.position.z };
-  const spot = moveValid ? wantPos : (findNearestValidSpot(wantPos.x, wantPos.z, radius, item.id) || from);
+  const spot = moveValid ? wantPos : (findNearestValidSpot(wantPos.x, wantPos.z, radius, item.id, 2.4, item) || from);
   item.mesh.position.set(spot.x, 0, spot.z);
   item.position.x = spot.x; item.position.z = spot.z;
   if (selectionRing) {
@@ -3235,7 +3222,29 @@ window.addEventListener('mouseup', () => {
   }
   disarmMove();
   updateStats();
+  bus.emit('itemchange', { item });
 });
+
+// Numeric edits from the inspector go through the same rules as dragging:
+// clamp to the room, refuse to land on top of another object, and record a
+// normal 'move' history entry so Ctrl+Z works.
+function setItemPositionChecked(item, x, z) {
+  const radius = item.footprintRadius || 0.4;
+  const c = clampToRoom(x, z, radius, item);
+  const hit = findCollidingItem(c.x, c.z, radius, item.id, item);
+  if (hit) return { ok: false, reason: `Overlaps ${hit.name}`, clamped: c };
+  const from = { x: item.position.x, z: item.position.z };
+  if (Math.abs(from.x - c.x) < 0.0005 && Math.abs(from.z - c.z) < 0.0005) return { ok: true, unchanged: true, x: c.x, z: c.z };
+  applyItemPosition(item.id, c);
+  pushHistory({ action: 'move', id: item.id, from, to: { x: c.x, z: c.z } });
+  return { ok: true, x: c.x, z: c.z, adjusted: Math.abs(c.x - x) > 0.0005 || Math.abs(c.z - z) > 0.0005 };
+}
+function setItemRotationRad(item, rad) {
+  const from = item.rotation;
+  if (Math.abs(from - rad) < 1e-4) return;
+  applyItemRotation(item.id, rad);
+  pushHistory({ action: 'rotate', id: item.id, from, to: rad });
+}
 
 function duplicateActiveItem() {
   if (!state.activeItem) { showToast('Select an item to duplicate', 'fa-clone'); return null; }
@@ -3279,7 +3288,13 @@ function focusSelected() {
 function placeItem(type, position, rotY = 0, opts = {}) {
   const item = ITEM_CATALOG[type];
   const mesh = item.factory();
-  let x, z, radius = 0.4;
+  let x, z;
+  // Radius/dims come from the real mesh on every path. The legacy
+  // skipBoundaryCheck path (templates, restored sessions, undo) used to pin
+  // the radius at 0.4 m for every item regardless of size, which made large
+  // pieces "small" to the collision system and small ones "large".
+  const radius = getFootprintRadius(mesh);
+  const dims = getFootprintDims(mesh);
   if (opts.skipBoundaryCheck) {
     // Legacy path used by curated template layouts and undo/redo history
     // restoration — unchanged from the original flat-margin behavior so
@@ -3288,8 +3303,7 @@ function placeItem(type, position, rotY = 0, opts = {}) {
     x = Math.max(-ROOM_W/2 + margin, Math.min(ROOM_W/2 - margin, position.x));
     z = Math.max(-ROOM_D/2 + margin, Math.min(ROOM_D/2 - margin, position.z));
   } else {
-    radius = getFootprintRadius(mesh);
-    const spot = findNearestValidSpot(position.x, position.z, radius, null);
+    const spot = findNearestValidSpot(position.x, position.z, radius, null, 2.4, { type, dims, rotation: rotY });
     if (!spot) {
       showToast('No clear space there — try another spot', 'fa-ban');
       return null;
@@ -3315,7 +3329,7 @@ function placeItem(type, position, rotY = 0, opts = {}) {
     id: opts.id || (Date.now() + Math.random()),
     type, position: { x, z }, rotation: rotY, mesh,
     name: item.name, price: item.price, seats: item.seats,
-    footprintRadius: radius,
+    footprintRadius: radius, dims,
   };
   state.placedItems.push(placed);
   scene.add(mesh);
@@ -3350,7 +3364,7 @@ function removePlacedItem(placed, opts = {}) {
     }
   });
   state.placedItems.splice(idx, 1);
-  if (state.activeItem && state.activeItem.id === placed.id) state.activeItem = null;
+  if (state.activeItem && state.activeItem.id === placed.id) deselectActiveItem();
   updateStats();
   if (!suppressHistory && !opts.skipHistory) pushHistory({ action: 'remove', item: snapshotItem(placed) });
 }
@@ -3374,7 +3388,7 @@ function clearAll(opts = {}) {
     });
   });
   state.placedItems = [];
-  state.activeItem = null;
+  deselectActiveItem();
   updateStats();
   if (!opts.silent) showToast('All items cleared', 'fa-trash');
 }
@@ -3408,13 +3422,16 @@ function setActiveItem(placed) {
   // outline" as the selection cue) — separate from the brand-colored floor
   // ring, which communicates footprint/placement validity, not selection.
   outlinePass.selectedObjects = [placed.mesh];
+  bus.emit('selection', { item: placed });
 }
 function deselectActiveItem() {
+  const had = state.activeItem;
   state.activeItem = null;
   if (selectionRing) selectionRing.visible = false;
   clearTimeout(_insightHighlightTimer); // same reasoning as setActiveItem above
   outlinePass.selectedObjects = [];
   disarmMove();
+  if (had) bus.emit('selection', { item: null });
 }
 
 // ========== UNDO / REDO ==========
@@ -3439,6 +3456,8 @@ function applyItemRotation(id, rotation) {
   if (selectionRing && state.activeItem && state.activeItem.id === id) {
     selectionRing.position.set(placed.position.x, 0.015, placed.position.z);
   }
+  updateStats();
+  bus.emit('itemchange', { item: placed });
 }
 function applyItemPosition(id, pos) {
   const placed = state.placedItems.find(i => i.id === id);
@@ -3449,6 +3468,8 @@ function applyItemPosition(id, pos) {
   if (selectionRing && state.activeItem && state.activeItem.id === id) {
     selectionRing.position.set(pos.x, 0.015, pos.z);
   }
+  updateStats();
+  bus.emit('itemchange', { item: placed });
 }
 
 function undo() {
@@ -3727,9 +3748,15 @@ function loadTemplate(name) {
   updateCityForTemplate(tpl.category);
   updateBreadcrumb();
   renderTemplateDropdown();
+  bus.emit('baseline'); // a template swap is not a cost "change" — reset the cost-delta baseline
 }
 
 // ========== STATS ==========
+// Catalog facts the spatial analysis needs (kept out of that pure module).
+function catalogInfo(type) {
+  const c = ITEM_CATALOG[type];
+  return c ? { seats: c.seats, cat: c.cat } : {};
+}
 function updateStats() {
   const seats = state.placedItems.reduce((s, i) => s + i.seats, 0);
   const total = state.placedItems.reduce((s, i) => s + i.price, 0);
@@ -3778,27 +3805,15 @@ function updateStats() {
   const analyticsFurniture = document.getElementById('analyticsFurnitureSubtotal');
   if (analyticsFurniture) analyticsFurniture.textContent = '$' + total.toLocaleString();
 
-  // ---- Accessibility (real, geometry-derived: checks actual clearance
-  // between every placed item's footprint circle and its neighbors +
-  // the room walls, against a minimum accessible-aisle width) ----
-  const MIN_CLEARANCE = MIN_ACCESSIBLE_CLEARANCE; // shared with the measurement tool below, so both use one source of truth
-  let tightestClearance = Infinity;
-  let tightestClearanceIds = []; // the specific placed item(s) responsible — lets the insight card highlight them in-scene, not just report a number
-  for (let i = 0; i < state.placedItems.length; i++) {
-    const a = state.placedItems[i];
-    const wallGap = Math.min(
-      ROOM_W / 2 - Math.abs(a.position.x),
-      ROOM_D / 2 - Math.abs(a.position.z)
-    ) - a.footprintRadius;
-    if (wallGap < tightestClearance) { tightestClearance = wallGap; tightestClearanceIds = [a.id]; }
-    for (let j = i + 1; j < state.placedItems.length; j++) {
-      const b = state.placedItems[j];
-      const dx = a.position.x - b.position.x, dz = a.position.z - b.position.z;
-      const dist = Math.hypot(dx, dz) - a.footprintRadius - b.footprintRadius;
-      if (dist < tightestClearance) { tightestClearance = dist; tightestClearanceIds = [a.id, b.id]; }
-    }
-  }
-  const accessible = state.placedItems.length < 2 || tightestClearance >= MIN_CLEARANCE * 0.55;
+  // ---- Accessibility: one shared analysis (spatial-analysis.js) — the same
+  // result drives this card, the Design-Intelligence tips, the 3D compliance
+  // overlay + collision markers, the inspector and the exported report, so
+  // they can never disagree. Thresholds are the app's existing ones. ----
+  const analysis = analyzeLayout(state.placedItems, { width: ROOM_W, depth: ROOM_D }, catalogInfo);
+  state.analysis = analysis;
+  const tightestClearance = analysis.tightest;
+  const tightestClearanceIds = analysis.tightestIds; // the specific placed item(s) responsible — lets the insight card highlight them in-scene, not just report a number
+  const accessible = analysis.accessible;
   const accessIcon = document.getElementById('complianceAccessIcon');
   const accessValueEl = document.getElementById('complianceAccessValue');
   if (accessIcon && accessValueEl) {
@@ -3877,6 +3892,7 @@ function updateStats() {
     const still = state.placedItems.find(i => i.id === state.activeItem.id);
     if (!still) deselectActiveItem();
   }
+  bus.emit('layout', { analysis, total, seats });
 }
 
 const _numberAnims = new Map(); // tracks the in-flight RAF id per element so rapid updates don't race
@@ -3910,7 +3926,7 @@ function renderDesignIntelligence({ seats, total, density, overCapacity, tightes
 
   if (!accessible && isFinite(tightestClearance)) {
     tips.push({ level: 'warn', icon: 'fa-person-walking-arrow-right', relatedIds: tightestClearanceIds,
-      text: `Clearance between two objects is only ${Math.max(0, tightestClearance).toFixed(2)}m — widen the gap to at least 0.9m for accessible circulation.` });
+      text: `Clearance between ${tightestClearanceIds.length > 1 ? 'two objects' : 'an object and the room boundary'} is only ${Math.max(0, tightestClearance).toFixed(2)}m — widen the gap to at least 0.9m for accessible circulation.` });
   }
 
   if (density > 0.45) {
@@ -4158,6 +4174,7 @@ function updateBreadcrumb() {
   let viewLabel = t('breadcrumb.workspace');
   if (state.view === 'city') viewLabel = t('breadcrumb.city');
   else if (state.view === 'top') viewLabel = t('breadcrumb.floor');
+  if (ws.mode === 'inspect') viewLabel = 'Inspection';
   trail.textContent = `ZKR CITY / ${district} / ${projectName.toUpperCase()} / ${viewLabel.toUpperCase()}`;
 }
 
@@ -4475,6 +4492,7 @@ function setCityScale(scale) {
   document.getElementById('viewportReadout').innerHTML = `<b>CAM</b> · ${label}`;
   document.querySelectorAll('[data-city-scale]').forEach(button => button.classList.toggle('active', button.dataset.cityScale === scale));
   updateCityInterface();
+  bus.emit('scale', { scale });
 }
 
 function focusDistrict(id) {
@@ -4617,7 +4635,7 @@ document.getElementById('rotateRight').addEventListener('click', () => rotateSel
 
 // ---------- Icon rail ----------
 document.getElementById('gridToggleBtn')?.addEventListener('click', () => toggleGrid());
-document.getElementById('measureToggleBtn')?.addEventListener('click', () => toggleMeasureMode());
+document.getElementById('measureToggleBtn')?.addEventListener('click', () => ws.ctx.measure.toggle());
 document.getElementById('railLayersBtn')?.addEventListener('click', () => {
   document.getElementById('rightRailCollapse')?.click();
 });
@@ -4690,9 +4708,12 @@ function updateDimensionLabel() {
     dimensionLabelEl.classList.remove('visible');
     return;
   }
-  const radius = state.activeItem.footprintRadius || 0.4;
-  const diameter = (radius * 2).toFixed(1);
-  dimensionLabelEl.textContent = `⌀ ${diameter}m`;
+  // Real footprint (width × depth) from the item's own geometry; falls back
+  // to the collision diameter only if an item somehow has no dims.
+  const dm = state.activeItem.dims;
+  dimensionLabelEl.textContent = dm
+    ? `${dm.w.toFixed(2)} × ${dm.d.toFixed(2)} m`
+    : `⌀ ${((state.activeItem.footprintRadius || 0.4) * 2).toFixed(1)}m`;
   dimensionLabelEl.classList.add('visible');
 }
 // Screen-position the floating toolbar above whatever's selected, each frame,
@@ -4747,6 +4768,8 @@ function rotateSelected(angle) {
     selectionRing.position.set(item.position.x, 0.015, item.position.z);
   }
   if (!suppressHistory) pushHistory({ action: 'rotate', id: item.id, from: prevRotation, to: item.rotation });
+  updateStats();
+  bus.emit('itemchange', { item });
   showToast(`Rotated ${item.name}`, 'fa-rotate');
 }
 
@@ -4812,8 +4835,6 @@ window.addEventListener('resize', () => {
 // ========== ANIMATION LOOP ==========
 let lastTime = performance.now();
 const _UP_AXIS = new THREE.Vector3(0, 1, 0); // reused each frame to avoid per-arrow GC churn
-const _measureMidScratch = new THREE.Vector3(); // reused every frame instead of allocating two Vector3s/frame while a measurement is on screen
-const _measureProjScratch = new THREE.Vector3();
 function tick(now) {
   const dt = Math.min(0.05, (now - lastTime) / 1000);
   lastTime = now;
@@ -4845,20 +4866,8 @@ function tick(now) {
     });
   }
 
-  // Measurement label follows its midpoint in screen space
-  if (measureLabel && measurePoints.length === 2) {
-    _measureMidScratch.set(
-      (measurePoints[0].x + measurePoints[1].x) / 2, 0.35,
-      (measurePoints[0].z + measurePoints[1].z) / 2
-    );
-    _measureProjScratch.copy(_measureMidScratch).project(camera);
-    const rect = renderer.domElement.getBoundingClientRect();
-    const sx = rect.left + (_measureProjScratch.x * 0.5 + 0.5) * rect.width;
-    const sy = rect.top + (-_measureProjScratch.y * 0.5 + 0.5) * rect.height;
-    measureLabel.style.left = sx + 'px';
-    measureLabel.style.top = sy + 'px';
-    measureLabel.style.display = _measureProjScratch.z < 1 ? 'block' : 'none';
-  }
+  // Measurement / spatial-overlay DOM labels follow their 3D anchors
+  workspaceFrame();
 
   // Floor Plan room/dimension labels — true early-return inside the
   // function itself when not in Floor Plan view, so this costs nothing
@@ -5077,6 +5086,7 @@ function saveProjectToStorage() {
       brandColor: state.brandColor,
       lang: state.lang,
       items: state.placedItems.map(snapshotItem),
+      measurements: ws.ctx?.measure.serialize() || state.pendingMeasurements || [],
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   } catch (e) {
@@ -5113,13 +5123,21 @@ function loadProjectFromStorage() {
     setBrandColor(data.brandColor);
   }
   if (data.lang && I18N[data.lang]) applyLanguage(data.lang, { silent: true });
+  state.pendingMeasurements = Array.isArray(data.measurements) ? data.measurements : []; // restored once the measure tool exists
   updateStats();
+  bus.emit('baseline');
   return true;
 }
 
 // ========== KEYBOARD ==========
 window.addEventListener('keydown', (e) => {
-  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  // (contenteditable added: typing a project name must not fire shortcuts)
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT' || e.target.isContentEditable) return;
+  if (e.key !== 'Escape' && ws.mode !== 'design') {
+    const mod = e.ctrlKey || e.metaKey;
+    const editing = (mod && /^[zydZYD]$/.test(e.key)) || e.key === 'Delete' || e.key === 'Backspace' || (!mod && !e.altKey && /^[\[\]rR1-9]$/.test(e.key));
+    if (editing) { e.preventDefault(); showToast('Switch to Design mode to edit the layout', 'fa-pen-ruler'); return; }
+  }
   if (e.key === 'Escape') {
     // Escape closes whatever's on top first: export modal, then cost panel, then deselects.
     if (helpModalEl.classList.contains('open')) {
@@ -5131,8 +5149,8 @@ window.addEventListener('keydown', (e) => {
     } else if (leftPanelEl.classList.contains('open') || rightPanelEl.classList.contains('open')) {
       setPanelOpen(leftPanelEl, leftPanelToggle, false);
       setPanelOpen(rightPanelEl, rightPanelToggle, false);
-    } else if (measureMode) {
-      toggleMeasureMode(false);
+    } else if (ws.ctx?.measure.active) {
+      ws.ctx.measure.toggle(false);
     } else if (moveArmed) {
       disarmMove();
     } else if (state.selectedCityEntity) {
@@ -5181,10 +5199,16 @@ const exportModal = document.getElementById('exportModal');
 const exportCanvas = document.getElementById('exportCanvas');
 const exportCtx = exportCanvas.getContext('2d');
 
+// One reference per session so the layout sheet and the report always carry the same REF.
+let _exportRef = null;
+function getExportRef() {
+  const prefix = state.template.substring(0, 3).toUpperCase();
+  if (!_exportRef || !_exportRef.startsWith(prefix + '-')) _exportRef = prefix + '-' + Math.floor(Math.random() * 9000 + 1000);
+  return _exportRef;
+}
 function openExportModal() {
   exportModal.classList.add('open');
-  document.getElementById('exportRef').textContent = 
-    (state.template.substring(0,3).toUpperCase()) + '-' + Math.floor(Math.random() * 9000 + 1000);
+  document.getElementById('exportRef').textContent = getExportRef();
   runExportAnimation();
   openOverlayFocus(exportModal);
 }
@@ -5571,6 +5595,30 @@ const _restoredSession = loadProjectFromStorage();
 if (!_restoredSession) loadTemplate('cafe');
 updateBreadcrumb();
 renderNotifications();
+
+// ========== WORKSPACE LAYER (inspector, spatial overlay, modes, palette, measure, cost delta, report) ==========
+// Everything in js/*.js beyond app.js reaches this file only through this
+// context object: scene handles plus the existing actions it should reuse.
+const workspaceFrame = initWorkspace({
+  THREE, scene, camera, renderer, controls, container, outlinePass, state, ROOM_W, ROOM_D, ROOM_H,
+  ITEM_CATALOG, TEMPLATES, FURNITURE_CATEGORIES,
+  rightPanel: document.getElementById('rightPanel'),
+  showToast, t, flashSaveStatus, computeCostBreakdown, updateBreadcrumb,
+  getMouseIntersection, focusOnPoint, focusSelected,
+  setActiveItem, deselectActiveItem, selectItem, disarmMove, armMoveSelected,
+  setItemPositionChecked, setItemRotationRad, rotateSelected, duplicateActiveItem, removePlacedItem,
+  undo, redo, historyState: () => ({ undo: undoStack.length, redo: redoStack.length }),
+  setCityScale, transitionToView, toggleGrid, toggleFireSafety, toggleCostPanel, enterFirstPerson, exitFirstPerson,
+  openExportModal, openHelpModal, clearIssue,
+  closeDrawers: () => { setPanelOpen(leftPanelEl, leftPanelToggle, false); setPanelOpen(rightPanelEl, rightPanelToggle, false); },
+  getProjectName: () => document.getElementById('projectName').textContent.trim() || 'Untitled Project',
+  getExportRef,
+});
+ws.ctx.measure.restore(state.pendingMeasurements);
+updateStats();               // first analysis → inspector, overlay, cost pill all sync
+bus.emit('baseline');
+// Test/inspection hook — only when the page is opened with ?debug
+if (new URLSearchParams(location.search).has('debug')) window.__zkr = { state, ws, ITEM_CATALOG, TEMPLATES, loadTemplate, placeItemAt, ROOM_W, ROOM_D, bus };
 setTimeout(() => setCityScale('city'), 180);
 requestAnimationFrame(tick);
 
@@ -5605,4 +5653,5 @@ if (!_restoredSession && !localStorage.getItem(WELCOME_SEEN_KEY)) {
   document.getElementById('welcomeDismiss')?.addEventListener('click', dismissWelcome);
   welcomeModal?.addEventListener('click', (e) => { if (e.target === welcomeModal) dismissWelcome(); });
 }
+
 

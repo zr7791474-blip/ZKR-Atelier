@@ -7,6 +7,7 @@
 <link rel="stylesheet" href="css/main.css">
 <link rel="stylesheet" href="css/enhancements.css">
 <link rel="stylesheet" href="css/polish.css">
+<link rel="stylesheet" href="css/workspace.css">
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -165,6 +166,12 @@
   <div class="breadcrumb-bar" id="breadcrumbBar" aria-label="Project workflow location">
     <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
     <span id="breadcrumbTrail">ZKR CITY / CANAL QUARTER / Canal House Café / DESIGN WORKSPACE</span>
+    <div class="mode-switch" role="group" aria-label="Working mode">
+      <button type="button" data-mode="design" class="active" aria-pressed="true" title="Design mode — place and edit"><i class="fa-solid fa-pen-ruler" aria-hidden="true"></i><span>Design</span></button>
+      <button type="button" data-mode="inspect" aria-pressed="false" title="Inspection mode (I) — collisions, clearances, compliance"><i class="fa-solid fa-magnifying-glass-location" aria-hidden="true"></i><span>Inspect</span></button>
+      <button type="button" data-mode="present" aria-pressed="false" title="Presentation mode (P) — scene only"><i class="fa-solid fa-display" aria-hidden="true"></i><span>Present</span></button>
+    </div>
+    <button type="button" class="palette-btn" id="paletteBtn" title="Command palette (Ctrl/⌘ K)" aria-label="Open command palette"><i class="fa-solid fa-terminal" aria-hidden="true"></i><span>Commands</span><kbd>Ctrl K</kbd></button>
   </div>
 
   <!-- WORKSPACE -->
@@ -288,6 +295,10 @@
           <button class="btn-icon btn tool-btn tool-btn--danger" id="deleteSelected" title="Delete selected (Del)" aria-label="Delete selected item"><i class="fa-solid fa-eraser" aria-hidden="true"></i></button>
         </div>
         <div class="tool-divider" role="separator" aria-hidden="true"></div>
+        <div class="tool-group" role="group" aria-label="Inspection">
+          <button class="btn-icon btn tool-btn" id="overlayToggleBtn" title="Compliance overlay (O)" aria-label="Toggle compliance overlay" aria-pressed="false"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i></button>
+        </div>
+        <div class="tool-divider" role="separator" aria-hidden="true"></div>
         <div class="tool-group" role="group" aria-label="Scene">
           <button class="btn-icon btn tool-btn tool-btn--danger" id="clearBtn" title="Clear all placed items" aria-label="Clear all placed items"><i class="fa-solid fa-trash" aria-hidden="true"></i></button>
         </div>
@@ -305,6 +316,26 @@
         </div>
       </div>
       
+      <!-- Real-time cost pill: total + the cost impact of the latest action -->
+      <button type="button" class="cost-pill is-empty" id="costPill" title="Open cost estimate (C)" aria-label="Estimated total. Open cost estimate.">
+        <span class="cp-label">Est. total</span><b class="cp-total" data-f="total">$0</b>
+        <span class="cp-delta" data-f="delta" data-dir="up"></span><span class="cp-why" data-f="why"></span>
+      </button>
+      <div class="sp-legend" id="spLegend" aria-label="Compliance overlay legend">
+        <span><i class="lg-ok"></i>Compliant</span><span><i class="lg-warn"></i>Tight &lt; 0.90 m</span><span><i class="lg-crit"></i>Insufficient &lt; 0.50 m</span><span><i class="lg-coll"></i>Collision</span>
+      </div>
+      <div class="present-summary" id="presentSummary" hidden></div>
+      <div class="present-bar" id="presentBar" role="toolbar" aria-label="Presentation controls">
+        <button type="button" data-view="perspective" class="active"><i class="fa-solid fa-cube" aria-hidden="true"></i><span>Interior</span></button>
+        <button type="button" data-view="top"><i class="fa-solid fa-vector-square" aria-hidden="true"></i><span>Plan</span></button>
+        <button type="button" data-view="city"><i class="fa-solid fa-city" aria-hidden="true"></i><span>City</span></button>
+        <i class="pb-sep" aria-hidden="true"></i>
+        <button type="button" id="presentWalkBtn" title="First-person walkthrough"><i class="fa-solid fa-person-walking" aria-hidden="true"></i><span>Walk</span></button>
+        <button type="button" id="presentSummaryToggle" class="active" title="Toggle project summary"><i class="fa-solid fa-circle-info" aria-hidden="true"></i><span>Summary</span></button>
+        <i class="pb-sep" aria-hidden="true"></i>
+        <button type="button" id="presentExit" class="pb-exit" title="Exit presentation (Esc)"><i class="fa-solid fa-xmark" aria-hidden="true"></i><span>Exit</span><kbd>Esc</kbd></button>
+      </div>
+
       <!-- Floor plan overlay (shown only in top view) -->
       <div class="floorplan-overlay" id="floorplanOverlay"></div>
       <div class="fp-crosshair" aria-hidden="true"></div>
@@ -337,6 +368,11 @@
         <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
       </button>
       <div class="rail-resizer rail-resizer--right" id="rightRailResizer" role="separator" aria-orientation="vertical" aria-label="Resize capacity panel"></div>
+
+      <section class="panel-section inspector-section" id="inspectorSection" aria-label="Inspector" aria-live="polite">
+        <div class="panel-title"><span>Inspector</span><span class="inspector-context" id="inspectorContext">No selection</span></div>
+        <div id="inspectorBody" class="inspector-body"></div>
+      </section>
 
       <div class="panel-section analytics-card">
         <div class="panel-title">
@@ -395,7 +431,7 @@
         </div>
       </div>
 
-      <div class="panel-section">
+      <div class="panel-section" data-ctx="design">
         <div class="panel-title">
           <span data-i18n="panel.lighting">Lighting</span>
           <i class="fa-solid fa-sun text-[10px]" style="color: var(--charcoal-3);"></i>
@@ -446,7 +482,7 @@
         </div>
       </div>
       
-      <div class="panel-section">
+      <div class="panel-section" data-ctx="design">
         <div class="stat-row" style="padding-bottom: 8px; border-bottom: 1px solid var(--line-soft);">
           <span class="stat-label flex items-center gap-2">
             <span class="w-1.5 h-1.5 rounded-full" id="egressDot" style="background: var(--success);"></span>
@@ -490,7 +526,7 @@
           <div class="scene-context-copy"><strong>District context</strong><span>CANAL / WEST BLOCK</span></div>
         </div>
       </div>
-      <div class="panel-section">
+      <div class="panel-section" data-ctx="design">
         <div class="panel-title"><span>Spatial register</span><span class="city-mode-badge" id="cityModeBadge">Interior</span></div>
         <div class="city-kpi-grid">
           <div class="city-kpi"><span>Population</span><strong id="panelPopulation">0</strong></div>
@@ -510,7 +546,7 @@
         <div class="city-activity-list" id="cityActivityList"></div>
       </div>
       
-      <div class="panel-section">
+      <div class="panel-section" data-ctx="design">
         <div class="panel-title">
           <span>Brand Color</span>
           <span class="font-mono text-[9px] font-semibold" id="brandHex" style="color: var(--accent-2); text-transform: none; letter-spacing: 0;">#17B6C4</span>
@@ -530,7 +566,7 @@
         </div>
       </div>
       
-      <div class="panel-section">
+      <div class="panel-section" data-ctx="design">
         <div class="panel-title"><span>Live Costing</span></div>
         <div class="flex items-baseline justify-between mb-3">
           <span class="text-[11px]" style="color: var(--charcoal-3);">Estimated total</span>
@@ -542,7 +578,7 @@
         </button>
       </div>
       
-      <div class="panel-section scroll">
+      <div class="panel-section scroll" data-ctx="design">
         <div class="panel-title">
           <span>Placed Items</span>
           <span class="font-mono text-[9px] font-semibold" style="text-transform: none; letter-spacing: 0; color: var(--charcoal-3);" id="placedCount">0</span>
@@ -628,14 +664,30 @@
       </div>
     </div>
     
+    <div class="export-report">
+      <div class="export-report-title">Compliance report <span>plan with numbered findings · issues · measurements · cost · schedule</span></div>
+      <div class="flex gap-2">
+        <button class="btn flex-1 justify-center" id="downloadReportHtml"><i class="fa-solid fa-file-code text-[11px]"></i>HTML</button>
+        <button class="btn btn-accent flex-1 justify-center" id="downloadReportPdf"><i class="fa-solid fa-file-pdf text-[11px]"></i>PDF report</button>
+      </div>
+    </div>
     <div class="flex gap-2">
       <button class="btn flex-1 justify-center" id="closeExport2">Close</button>
       <button class="btn btn-primary flex-1 justify-center" id="downloadPdf">
         <i class="fa-solid fa-download text-[11px]"></i>
-        Download PDF
+        Layout sheet (PDF)
       </button>
     </div>
   </div>
+</div>
+
+<!-- Inspector bottom sheet (≤900px): the inspector section is moved in here by inspector.js -->
+<div class="inspector-sheet" id="inspectorSheet" aria-label="Inspector sheet">
+  <div class="inspector-sheet-bar">
+    <button type="button" class="inspector-sheet-handle" data-sheet="toggle" aria-label="Expand or collapse inspector"><i class="fa-solid fa-grip-lines" aria-hidden="true"></i><span class="inspector-sheet-title">Inspector</span></button>
+    <button type="button" class="insp-icon-btn" data-sheet="close" aria-label="Close inspector"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
+  </div>
+  <div class="inspector-sheet-body"></div>
 </div>
 
 <!-- Toast -->
@@ -676,6 +728,11 @@
       <div class="shortcut-row"><span>Toggle fire egress</span><span class="shortcut-keys"><kbd>F</kbd></span></div>
       <div class="shortcut-row"><span>Toggle cost panel</span><span class="shortcut-keys"><kbd>C</kbd></span></div>
       <div class="shortcut-row"><span>Select furniture</span><span class="shortcut-keys"><kbd>1</kbd><span class="shortcut-alt">–</span><kbd>9</kbd></span></div>
+      <div class="shortcut-row"><span>Command palette</span><span class="shortcut-keys"><kbd>Ctrl/⌘</kbd><kbd>K</kbd></span></div>
+      <div class="shortcut-row"><span>Inspection mode</span><span class="shortcut-keys"><kbd>I</kbd></span></div>
+      <div class="shortcut-row"><span>Presentation mode</span><span class="shortcut-keys"><kbd>P</kbd></span></div>
+      <div class="shortcut-row"><span>Compliance overlay</span><span class="shortcut-keys"><kbd>O</kbd></span></div>
+      <div class="shortcut-row"><span>Measure distance</span><span class="shortcut-keys"><kbd>M</kbd></span></div>
       <div class="shortcut-row"><span>Cancel / deselect</span><span class="shortcut-keys"><kbd>Esc</kbd></span></div>
     </div>
   </div>

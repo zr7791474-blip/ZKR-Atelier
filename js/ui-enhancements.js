@@ -86,7 +86,7 @@ function initRailResize() {
 // primary scrollable work areas (Furniture list, Placed Items) are left
 // alone since collapsing your main content area isn't useful.
 function initAccordions() {
-  const sections = document.querySelectorAll('.panel-left .panel-section:not(.scroll), .panel-right .panel-section:not(.scroll)');
+  const sections = document.querySelectorAll('.panel-left .panel-section:not(.scroll), .panel-right .panel-section:not(.scroll):not(.inspector-section)');
   sections.forEach((section) => {
     const title = section.querySelector('.panel-title');
     if (!title) return;
