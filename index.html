@@ -12,47 +12,49 @@
   :root{
     --bg:#F2FBF3; --bg-2:#DFF6E7; --surface:#FBFEFC; --surface-2:#EAF9EE;
     --line:#D6ECEA; --line-soft:#E9F8F0;
-    --charcoal:#0A1B33; --charcoal-2:#29405E; --charcoal-3:#4C5F78;
+    --charcoal:#0A1B33; --charcoal-rgb:10,27,51; --charcoal-2:#29405E; --charcoal-3:#4C5F78;
     --accent:#2690D8; --accent-rgb:38,144,216; --accent-2:#0449D1;
     --mint:#9AEDCE; --mint-dark:#3E9FB0; --teal:#4BCADF;
-    --ink:#071224;
+    --ink:#071224; --ink-rgb:7,18,36; --ink-muted:#B9C3CE;
   }
   *{box-sizing:border-box;}
   html{scroll-behavior:smooth; scroll-padding-top:64px;}
   body{
     margin:0; background:var(--bg); color:var(--charcoal);
     font-family:'Manrope',-apple-system,sans-serif; -webkit-font-smoothing:antialiased;
-    letter-spacing:-0.006em; overflow-x:hidden;
+    letter-spacing:-0.006em; overflow-x:hidden; overflow-wrap:break-word;
   }
   img{max-width:100%; display:block;}
   a{color:inherit;}
   .mono{font-family:'IBM Plex Mono',monospace;}
-  .wrap{max-width:1180px; margin:0 auto; padding:0 28px;}
+  .wrap{max-width:1180px; margin:0 auto; padding:0 clamp(16px,4.5vw,28px);}
   .label{
     font-family:'IBM Plex Mono',monospace; font-size:10.5px; font-weight:500;
-    letter-spacing:0.16em; text-transform:uppercase; color:var(--charcoal-3);
+    letter-spacing:0.12em; text-transform:uppercase; color:var(--charcoal-3);
   }
 
   /* ---------- NAV ---------- */
   .nav{
     position:fixed; top:0; left:0; right:0; z-index:50; height:64px;
-    display:flex; align-items:center; justify-content:space-between;
-    padding:0 28px; background:var(--bg);
+    display:flex; align-items:center; justify-content:space-between; gap:10px;
+    padding:0 clamp(14px,4vw,28px); background:var(--bg);
     border-bottom:1px solid var(--line);
   }
-  .nav-brand{display:flex; align-items:center; gap:10px; text-decoration:none;}
-  .nav-logo{width:30px; height:30px; border-radius:6px; overflow:hidden; flex:none; background:#0A1522;}
+  .nav-brand{display:flex; align-items:center; gap:clamp(6px,2vw,10px); text-decoration:none; min-width:0;}
+  .nav-logo{width:clamp(24px,7vw,30px); height:clamp(24px,7vw,30px); border-radius:6px; overflow:hidden; flex:none; background:var(--ink);}
   .nav-logo img{width:100%; height:100%; object-fit:cover;}
-  .nav-word{font-weight:800; letter-spacing:-0.03em; font-size:14.5px; line-height:1.05; color:var(--ink);}
-  .nav-sub{font-family:'IBM Plex Mono',monospace; font-size:8.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--charcoal-3);}
-  .nav-links{display:flex; align-items:center; gap:28px;}
+  .nav-word{font-weight:800; letter-spacing:-0.03em; font-size:clamp(12px,3.4vw,14.5px); line-height:1.05; color:var(--ink); white-space:nowrap;}
+  .nav-sub{font-family:'IBM Plex Mono',monospace; font-size:8.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--charcoal-3); white-space:nowrap;}
+  .nav-links{display:flex; align-items:center; gap:28px; flex:none;}
   .nav-links a{font-size:12.5px; font-weight:600; color:var(--charcoal-2); text-decoration:none;}
   .nav-links a:hover{color:var(--accent-2);}
   .btn{
     display:inline-flex; align-items:center; gap:8px; font-weight:700; font-size:13px;
     padding:10px 18px; border-radius:3px; border:1px solid transparent; cursor:pointer;
     text-decoration:none; letter-spacing:-0.01em; transition:background .15s,border-color .15s,color .15s;
+    white-space:nowrap; flex:none;
   }
+  .nav .btn-primary{padding:clamp(8px,2.4vw,10px) clamp(12px,3.6vw,18px); font-size:clamp(11.5px,3vw,13px);}
   .btn-primary{background:var(--ink); color:#fff;}
   .btn-primary:hover{background:var(--accent-2);}
   .btn-primary:focus-visible, a:focus-visible, button:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
@@ -60,126 +62,127 @@
   .btn-ghost:hover{border-color:var(--accent-2); color:var(--accent-2);}
 
   /* ---------- HERO ---------- */
-  .hero{padding:150px 0 90px; position:relative;}
+  .hero{padding:clamp(96px,20vw,150px) 0 clamp(48px,10vw,90px); position:relative;}
   .hero-grid{
     position:absolute; inset:0; z-index:-1; opacity:.35;
-    background-image:linear-gradient(rgba(10,27,51,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(10,27,51,.05) 1px,transparent 1px);
+    background-image:linear-gradient(rgba(var(--charcoal-rgb),.05) 1px,transparent 1px),linear-gradient(90deg,rgba(var(--charcoal-rgb),.05) 1px,transparent 1px);
     background-size:44px 44px; mask-image:linear-gradient(180deg,#000 0%,transparent 80%);
   }
   .hero-eyebrow{display:flex; align-items:center; gap:10px; margin-bottom:22px;}
   .hero-eyebrow .dot{width:6px; height:6px; background:var(--accent); border-radius:1px;}
   h1.hero-title{
     font-size:clamp(32px,5vw,58px); font-weight:800; letter-spacing:-0.03em; line-height:1.08;
-    margin:0 0 22px; color:var(--ink); max-width:16ch;
+    margin:0 0 22px; color:var(--ink); max-width:16ch; text-wrap:balance;
   }
   h1.hero-title em{font-style:normal; color:var(--accent-2);}
   .hero-desc{font-size:16.5px; line-height:1.6; color:var(--charcoal-2); max-width:52ch; margin:0 0 34px;}
   .hero-cta{display:flex; align-items:center; gap:16px; flex-wrap:wrap;}
   .hero-cta .btn-primary{padding:14px 26px; font-size:14px;}
-  .hero-meta{margin-top:56px; display:flex; gap:38px; flex-wrap:wrap; border-top:1px solid var(--line); padding-top:22px;}
+  .hero-meta{margin-top:56px; display:flex; gap:clamp(18px,6vw,38px); flex-wrap:wrap; border-top:1px solid var(--line); padding-top:22px;}
   .hero-meta .m-val{font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:13.5px; color:var(--ink);}
-  .hero-meta .m-lbl{font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--charcoal-3); margin-top:3px;}
+  .hero-meta .m-lbl{font-size:10.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--charcoal-3); margin-top:3px;}
 
-  .hero-frame{margin-top:64px; position:relative;}
-  .hero-frame::before{
+  .hero-frame{margin-top:clamp(40px,8vw,64px);}
+  .hero-shot{position:relative;}
+  .hero-shot::before{
     content:''; position:absolute; left:5%; right:5%; top:16px; bottom:-14px;
     background:var(--ink); opacity:.06; filter:blur(24px); z-index:-1; border-radius:4px;
   }
-  .hero-frame img{width:100%; border:1px solid var(--line); border-radius:3px; box-shadow:0 1px 2px rgba(7,18,36,.06), 0 10px 22px -16px rgba(7,18,36,.2);}
+  .hero-frame img{width:100%; border:1px solid var(--line); border-radius:3px; box-shadow:0 1px 2px rgba(var(--ink-rgb),.06), 0 10px 22px -16px rgba(var(--ink-rgb),.2);}
   .hero-frame figcaption{margin-top:12px; font-size:11.5px; color:var(--charcoal-3);}
   .hero-frame figcaption .idx{font-family:'IBM Plex Mono',monospace; color:var(--accent-2); margin-right:8px;}
 
   /* ---------- SECTION SHELL ---------- */
-  section{padding:88px 0;}
+  section{padding:clamp(48px,9vw,88px) 0;}
   section.alt{background:var(--surface-2); border-top:1px solid var(--line); border-bottom:1px solid var(--line);}
-  .sec-head{max-width:640px; margin-bottom:48px;}
+  .sec-head{max-width:640px; margin-bottom:clamp(32px,6vw,48px);}
   .sec-head .label{margin-bottom:14px;}
-  .sec-head h2{font-size:clamp(24px,3vw,34px); font-weight:800; letter-spacing:-0.03em; margin:0 0 14px; color:var(--ink);}
+  .sec-head h2{font-size:clamp(24px,3vw,34px); font-weight:800; letter-spacing:-0.03em; margin:0 0 14px; color:var(--ink); text-wrap:balance;}
   .sec-head p{font-size:14.5px; line-height:1.65; color:var(--charcoal-2); margin:0;}
 
   /* problem / solution */
   .split{display:grid; grid-template-columns:1fr 1fr; gap:56px; align-items:start;}
-  .split h3{font-size:13px; letter-spacing:.02em; margin:0 0 10px; color:var(--ink);}
-  .split p{font-size:14px; line-height:1.7; color:var(--charcoal-2); margin:0;}
+  .split p:not(.label){font-size:14px; line-height:1.7; color:var(--charcoal-2); margin:0;}
 
-  /* capability grid */
-  .cap-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--line); border:1px solid var(--line);}
-  .cap-card{background:var(--surface); padding:26px 24px; min-height:168px; display:flex; flex-direction:column; gap:10px;}
-  .cap-card .n{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--accent-2); font-weight:600;}
-  .cap-card h4{font-size:14.5px; font-weight:700; letter-spacing:-0.015em; margin:0; color:var(--ink);}
-  .cap-card p{font-size:12.5px; line-height:1.6; color:var(--charcoal-3); margin:0;}
+  /* capabilities — asymmetric: 3 featured + a dense spec index, not 9 identical cards */
+  .cap-layout{display:grid; grid-template-columns:1.05fr 1fr; gap:0 64px;}
+  .cap-featured{display:flex; flex-direction:column; border-top:1px solid var(--line);}
+  .cap-feat{padding:26px 0; border-bottom:1px solid var(--line); display:grid; grid-template-columns:44px 1fr; gap:18px;}
+  .cap-feat .n{font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--accent-2); font-weight:600; padding-top:3px;}
+  .cap-feat h4{font-size:16px; font-weight:700; letter-spacing:-0.015em; margin:0 0 8px; color:var(--ink);}
+  .cap-feat p{font-size:13.5px; line-height:1.65; color:var(--charcoal-2); margin:0; max-width:46ch;}
+
+  .cap-index{border-top:1px solid var(--line); margin-top:0;}
+  .cap-row{display:flex; gap:16px; padding:15px 0; border-bottom:1px solid var(--line); align-items:baseline;}
+  .cap-row .lbl{font-size:13.5px; font-weight:700; color:var(--ink); flex:0 0 auto; width:38%; min-width:0;}
+  .cap-row .desc{font-size:12.5px; line-height:1.55; color:var(--charcoal-3); margin:0; min-width:0;}
+
+  .spec-strip{
+    margin-top:clamp(40px,7vw,64px); padding-top:22px; border-top:1px solid var(--line);
+    display:flex; flex-wrap:wrap; gap:10px 28px;
+  }
+  .spec-strip span{font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--charcoal-3); letter-spacing:.03em; white-space:nowrap;}
+  .spec-strip span b{color:var(--accent-2); font-weight:600;}
 
   /* gallery */
-  .gallery{display:grid; grid-template-columns:1.4fr 1fr; grid-auto-rows:230px; gap:2px; background:var(--line); border:1px solid var(--line);}
+  .gallery{display:grid; grid-template-columns:1.4fr 1fr; grid-auto-rows:clamp(150px,32vw,230px); gap:2px; background:var(--line); border:1px solid var(--line);}
   .gallery figure{margin:0; background:var(--surface); overflow:hidden; position:relative;}
   .gallery figure.big{grid-row:span 2;}
   .gallery img{width:100%; height:100%; object-fit:cover; display:block;}
   .gallery figcaption{
     position:absolute; left:0; right:0; bottom:0; padding:12px 14px;
-    background:linear-gradient(0deg,rgba(7,18,36,.82),transparent);
+    background:linear-gradient(0deg,rgba(var(--ink-rgb),.82),transparent);
     color:#fff; font-size:11.5px; font-weight:600; display:flex; align-items:center; gap:8px;
   }
   .gallery figcaption .idx{font-family:'IBM Plex Mono',monospace; color:var(--mint); font-weight:500;}
 
-  /* workflow */
-  .workflow{list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(4,1fr); gap:0; border-top:1px solid var(--line);}
-  .workflow li{padding:26px 22px 26px 0; border-right:1px solid var(--line); position:relative;}
-  .workflow li:last-child{border-right:none;}
-  .workflow .step-n{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--accent-2); font-weight:600; display:block; margin-bottom:12px;}
-  .workflow h4{font-size:13.5px; font-weight:700; margin:0 0 8px; color:var(--ink);}
-  .workflow p{font-size:12px; line-height:1.6; color:var(--charcoal-3); margin:0;}
+  /* workflow — editorial process list with oversized ghost numerals, not 4 equal boxes */
+  .workflow{list-style:none; margin:0; padding:0;}
+  .workflow li{
+    display:grid; grid-template-columns:88px 1fr; align-items:start; gap:8px 22px;
+    padding:26px 0; border-top:1px solid var(--line); position:relative;
+  }
+  .workflow li:last-child{border-bottom:1px solid var(--line);}
+  .workflow .step-n{
+    font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:clamp(30px,5vw,44px);
+    line-height:1; color:var(--charcoal-2); opacity:.16;
+    grid-row:1 / span 2;
+  }
+  .workflow h4{font-size:15px; font-weight:700; margin:0; color:var(--ink); align-self:end; min-width:0;}
+  .workflow p{font-size:13px; line-height:1.6; color:var(--charcoal-3); margin:0; max-width:52ch; min-width:0;}
 
-  /* tech highlights */
-  .tech-list{display:grid; grid-template-columns:repeat(2,1fr); gap:14px 40px; margin:0; padding:0;}
-  .tech-list li{list-style:none; display:flex; gap:12px; align-items:baseline; font-size:13px; color:var(--charcoal-2); padding:14px 0; border-bottom:1px solid var(--line);}
-  .tech-list .tag{font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--accent-2); flex:none; width:64px;}
+  /* final cta — asymmetric split, not a centered SaaS slab */
+  .cta-block{background:var(--ink); color:#fff; padding:clamp(44px,8vw,64px) 0;}
+  .cta-row{display:flex; justify-content:space-between; align-items:center; gap:32px; flex-wrap:wrap;}
+  .cta-row > div{min-width:0;}
+  .cta-row h2{font-size:clamp(22px,3vw,30px); font-weight:800; letter-spacing:-0.03em; margin:0 0 8px; text-wrap:balance;}
+  .cta-row p{color:var(--ink-muted); font-size:13.5px; margin:0; max-width:40ch;}
+  .cta-row .btn-primary{background:var(--accent); flex:none;}
+  .cta-row .btn-primary:hover{background:var(--mint); color:var(--ink);}
 
-  /* final cta */
-  .cta-block{background:var(--ink); color:#fff; padding:80px 0; text-align:center;}
-  .cta-block h2{font-size:clamp(26px,4vw,42px); font-weight:800; letter-spacing:-0.03em; margin:0 0 18px;}
-  .cta-block p{color:#B9C3CE; font-size:14.5px; margin:0 0 34px;}
-  .cta-block .btn-primary{background:var(--accent);}
-  .cta-block .btn-primary:hover{background:var(--mint); color:var(--ink);}
-
-  footer{padding:34px 0; border-top:1px solid var(--line);}
+  footer{padding:clamp(24px,5vw,34px) 0; border-top:1px solid var(--line);}
   .foot-row{display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px;}
   .foot-row .label{margin:0;}
 
   @media (max-width:920px){
     .split{grid-template-columns:1fr; gap:34px;}
-    .cap-grid{grid-template-columns:repeat(2,1fr);}
-    .gallery{grid-template-columns:1fr; grid-auto-rows:220px;}
+    .cap-layout{grid-template-columns:1fr; gap:0;}
+    .cap-index{margin-top:8px;}
+    .gallery{grid-template-columns:1fr;}
     .gallery figure.big{grid-row:auto;}
-    .workflow{grid-template-columns:repeat(2,1fr);}
-    .workflow li{border-bottom:1px solid var(--line);}
-    .tech-list{grid-template-columns:1fr;}
     .nav-links{display:none;}
-    .hero{padding:130px 0 70px;}
-    .hero-meta{gap:28px;}
-  }
-  @media (max-width:700px){
-    .cap-grid{grid-template-columns:1fr;}
-    .cap-card{min-height:0;}
   }
   @media (max-width:560px){
-    .workflow{grid-template-columns:1fr;}
-    .workflow li{border-right:none;}
-    .hero{padding:118px 0 56px;}
-    .wrap{padding:0 18px;}
     .hero-cta{gap:12px;}
     .hero-cta .btn{width:100%; justify-content:center;}
-    .gallery{grid-auto-rows:200px;}
-    section{padding:64px 0;}
-    .cta-block{padding:60px 0;}
+    .cap-row{flex-direction:column; gap:4px;}
+    .cap-row .lbl{width:auto;}
+    .workflow li{grid-template-columns:56px 1fr;}
+    .cta-row{flex-direction:column; align-items:flex-start; text-align:left;}
+    .cta-row .btn-primary{width:100%; justify-content:center;}
   }
-  @media (max-width:420px){
-    .nav{padding:0 16px;}
+  @media (max-width:380px){
     .nav-sub{display:none;}
-    .nav .btn-primary{padding:8px 12px; font-size:12px;}
-    .nav-brand{gap:8px;}
-    .hero-meta{gap:20px 26px;}
-    .gallery{grid-auto-rows:170px;}
-    .foot-row{flex-direction:column; align-items:flex-start;}
   }
   @media (prefers-reduced-motion: reduce){
     html{scroll-behavior:auto;}
@@ -206,7 +209,6 @@
     <a href="#capabilities">Capabilities</a>
     <a href="#preview">Preview</a>
     <a href="#workflow">Workflow</a>
-    <a href="#stack">Stack</a>
   </div>
   <a class="btn btn-primary" href="app.html">Enter Workspace</a>
 </nav>
@@ -238,7 +240,9 @@
       </div>
 
       <figure class="hero-frame reveal">
-        <img src="screens/3dperspective.JPG" alt="ZKR Atelier 3D perspective view of a city block with buildings, a live inspector panel and analytics sidebar" width="1920" height="947" loading="eager">
+        <div class="hero-shot">
+          <img src="screens/3dperspective.JPG" alt="ZKR Atelier 3D perspective view of a city block with buildings, a live inspector panel and analytics sidebar" width="1920" height="947" loading="eager">
+        </div>
         <figcaption><span class="idx">01 / 3D PERSPECTIVE</span>Real-time scene — floor area, capacity and compliance readouts update as the layout changes.</figcaption>
       </figure>
     </div>
@@ -248,14 +252,14 @@
   <section aria-labelledby="problem-h">
     <div class="wrap split">
       <div>
-        <h3 class="label" style="margin-bottom:14px;">The problem</h3>
+        <p class="label" style="margin-bottom:14px;">The problem</p>
         <p>Early interior and site layout work is usually split across a floor-plan sketch, a
           separate spreadsheet for code compliance and cost, and a rendering tool for client
           presentation — three disconnected artifacts that drift out of sync the moment the
           layout changes.</p>
       </div>
       <div>
-        <h3 class="label" style="margin-bottom:14px;color:var(--accent-2);">What ZKR Atelier does</h3>
+        <p class="label" style="margin-bottom:14px;color:var(--accent-2);">What ZKR Atelier does</p>
         <p id="problem-h">A single scene is the source of truth. Placing, moving or resizing an
           object immediately re-runs the same clearance/egress analysis that feeds the
           Accessibility card, the 3D compliance overlay, the inspector and the exported PDF — so
@@ -270,18 +274,41 @@
       <div class="sec-head">
         <div class="label">Capabilities</div>
         <h2 id="cap-h">What's actually in the workspace</h2>
-        <p>Each of these maps to a working feature in the app — not a roadmap item.</p>
+        <p>Three capabilities carry the product. The rest support them.</p>
       </div>
-      <div class="cap-grid">
-        <div class="cap-card"><span class="n">01</span><h4>3D scene</h4><p>Three.js-driven real-time viewport with 3D perspective, city-overview and floor-plan camera modes.</p></div>
-        <div class="cap-card"><span class="n">02</span><h4>Spatial &amp; compliance analysis</h4><p>A single analysis pass checks fire egress, clearance and accessibility, driving the overlay, inspector and report together.</p></div>
-        <div class="cap-card"><span class="n">03</span><h4>Measurement tool</h4><p>Press <span class="mono">M</span>, click a start point, and read a live running distance as you move — measurements persist with the project.</p></div>
-        <div class="cap-card"><span class="n">04</span><h4>Contextual inspector</h4><p>One panel that adapts to what's selected — an object's properties, or a flagged clearance issue and its fix.</p></div>
-        <div class="cap-card"><span class="n">05</span><h4>Command palette</h4><p><span class="mono">Ctrl/⌘+K</span> surfaces only the actions that are actually runnable in the current mode and selection.</p></div>
-        <div class="cap-card"><span class="n">06</span><h4>Cost &amp; capacity</h4><p>Furniture subtotal, built value and seating capacity update live as the plan changes.</p></div>
-        <div class="cap-card"><span class="n">07</span><h4>Presentation mode</h4><p>A distraction-free walkthrough view for showing a layout to a client, with a single-key exit.</p></div>
-        <div class="cap-card"><span class="n">08</span><h4>PDF export</h4><p>Generates a client-ready report of the current layout and its analysis, built with jsPDF.</p></div>
-        <div class="cap-card"><span class="n">09</span><h4>Scenario templates</h4><p>Start from a set of commercial, hospitality and public-space templates instead of a blank plot.</p></div>
+
+      <div class="cap-layout">
+        <div class="cap-featured">
+          <div class="cap-feat">
+            <span class="n">01</span>
+            <div><h4>Real-time 3D scene</h4><p>Three.js-driven viewport with 3D perspective, city-overview and floor-plan camera modes — the same scene throughout, not three separate views.</p></div>
+          </div>
+          <div class="cap-feat">
+            <span class="n">02</span>
+            <div><h4>Spatial &amp; compliance analysis</h4><p>One analysis pass checks fire egress, clearance and accessibility, and drives the 3D overlay, the inspector and the exported report from that single result.</p></div>
+          </div>
+          <div class="cap-feat">
+            <span class="n">03</span>
+            <div><h4>Client-ready PDF export</h4><p>Generates a report of the current layout and its analysis in the browser — built with jsPDF, no server round-trip.</p></div>
+          </div>
+        </div>
+
+        <div class="cap-index">
+          <div class="cap-row"><span class="lbl">Measurement tool</span><p class="desc">Press <span class="mono">M</span>, click a point, read a live running distance as you move.</p></div>
+          <div class="cap-row"><span class="lbl">Contextual inspector</span><p class="desc">One panel that adapts to the selection — an object's properties, or a flagged issue and its fix.</p></div>
+          <div class="cap-row"><span class="lbl">Command palette</span><p class="desc"><span class="mono">Ctrl/⌘+K</span> — only the actions runnable in the current mode and selection.</p></div>
+          <div class="cap-row"><span class="lbl">Cost &amp; capacity</span><p class="desc">Furniture subtotal, built value and seating capacity update live as the plan changes.</p></div>
+          <div class="cap-row"><span class="lbl">Presentation mode</span><p class="desc">A distraction-free walkthrough view for clients, with a single-key exit.</p></div>
+          <div class="cap-row"><span class="lbl">Scenario templates</span><p class="desc">Commercial, hospitality and public-space starting points instead of a blank plot.</p></div>
+        </div>
+      </div>
+
+      <div class="spec-strip">
+        <span><b>ENGINE</b> Three.js, three camera modes</span>
+        <span><b>LOGIC</b> one pure compliance function</span>
+        <span><b>EXPORT</b> client-side, via jsPDF</span>
+        <span><b>I18N</b> string keys throughout</span>
+        <span><b>DEPLOY</b> fully static, no backend</span>
       </div>
     </div>
   </section>
@@ -335,28 +362,13 @@
     </div>
   </section>
 
-  <!-- STACK -->
-  <section id="stack" aria-labelledby="stack-h">
-    <div class="wrap">
-      <div class="sec-head">
-        <div class="label">Under the hood</div>
-        <h2 id="stack-h">Technical highlights</h2>
-      </div>
-      <ul class="tech-list">
-        <li><span class="tag">ENGINE</span>Three.js real-time 3D viewport with three interchangeable camera modes.</li>
-        <li><span class="tag">LOGIC</span>A single, pure spatial-analysis function feeds every compliance surface in the app.</li>
-        <li><span class="tag">UI</span>A contextual inspector and a scoped command palette, both driven by current selection/mode.</li>
-        <li><span class="tag">EXPORT</span>Client-side PDF report generation via jsPDF — no server round-trip.</li>
-        <li><span class="tag">I18N</span>String keys throughout the interface for straightforward localization.</li>
-        <li><span class="tag">DEPLOY</span>A fully static build — no backend required to run the workspace.</li>
-      </ul>
-    </div>
-  </section>
-
+  <!-- CTA -->
   <div class="cta-block">
-    <div class="wrap">
-      <h2>Open the workspace</h2>
-      <p>No sign-up. The current scenario loads directly into the workspace above.</p>
+    <div class="wrap cta-row">
+      <div>
+        <h2>Open the workspace</h2>
+        <p>No sign-up. The current scenario loads directly into the workspace.</p>
+      </div>
       <a class="btn btn-primary" href="app.html">Enter Workspace →</a>
     </div>
   </div>
