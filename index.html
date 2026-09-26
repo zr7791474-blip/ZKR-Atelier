@@ -3,761 +3,347 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ZKR Atelier — Architectural Planning Instrument</title>
-<link rel="stylesheet" href="css/main.css">
-<link rel="stylesheet" href="css/enhancements.css">
-<link rel="stylesheet" href="css/polish.css">
-<link rel="stylesheet" href="css/workspace.css">
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<title>ZKR / Atelier — Architectural Planning Instrument</title>
+<meta name="description" content="ZKR Atelier is a real-time 3D architectural planning instrument: spatial compliance analysis, measurement, cost estimation and report export in one workspace.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-<script type="importmap">
-{
-  "imports": {
-    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+<style>
+  :root{
+    --bg:#F2FBF3; --bg-2:#DFF6E7; --surface:#FBFEFC; --surface-2:#EAF9EE;
+    --line:#D6ECEA; --line-soft:#E9F8F0;
+    --charcoal:#0A1B33; --charcoal-2:#29405E; --charcoal-3:#4C5F78;
+    --accent:#2690D8; --accent-rgb:38,144,216; --accent-2:#0449D1;
+    --mint:#9AEDCE; --mint-dark:#3E9FB0; --teal:#4BCADF;
+    --ink:#071224;
   }
-}
-</script>
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth; scroll-padding-top:64px;}
+  body{
+    margin:0; background:var(--bg); color:var(--charcoal);
+    font-family:'Manrope',-apple-system,sans-serif; -webkit-font-smoothing:antialiased;
+    letter-spacing:-0.006em; overflow-x:hidden;
+  }
+  img{max-width:100%; display:block;}
+  a{color:inherit;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  .wrap{max-width:1180px; margin:0 auto; padding:0 28px;}
+  .label{
+    font-family:'IBM Plex Mono',monospace; font-size:10.5px; font-weight:500;
+    letter-spacing:0.16em; text-transform:uppercase; color:var(--charcoal-3);
+  }
 
+  /* ---------- NAV ---------- */
+  .nav{
+    position:fixed; top:0; left:0; right:0; z-index:50; height:64px;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:0 28px; background:rgba(242,251,243,0.86); backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  .nav-brand{display:flex; align-items:center; gap:10px; text-decoration:none;}
+  .nav-logo{width:30px; height:30px; border-radius:6px; overflow:hidden; flex:none; background:#0A1522;}
+  .nav-logo img{width:100%; height:100%; object-fit:cover;}
+  .nav-word{font-weight:800; letter-spacing:-0.03em; font-size:14.5px; line-height:1.05; color:var(--ink);}
+  .nav-sub{font-family:'IBM Plex Mono',monospace; font-size:8.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--charcoal-3);}
+  .nav-links{display:flex; align-items:center; gap:28px;}
+  .nav-links a{font-size:12.5px; font-weight:600; color:var(--charcoal-2); text-decoration:none;}
+  .nav-links a:hover{color:var(--accent-2);}
+  .btn{
+    display:inline-flex; align-items:center; gap:8px; font-weight:700; font-size:13px;
+    padding:10px 18px; border-radius:3px; border:1px solid transparent; cursor:pointer;
+    text-decoration:none; letter-spacing:-0.01em; transition:background .15s,border-color .15s,color .15s;
+  }
+  .btn-primary{background:var(--ink); color:#fff;}
+  .btn-primary:hover{background:var(--accent-2);}
+  .btn-primary:focus-visible, a:focus-visible, button:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+  .btn-ghost{border-color:var(--charcoal-2); color:var(--charcoal-2); background:transparent;}
+  .btn-ghost:hover{border-color:var(--accent-2); color:var(--accent-2);}
 
+  /* ---------- HERO ---------- */
+  .hero{padding:150px 0 90px; position:relative;}
+  .hero-grid{
+    position:absolute; inset:0; z-index:-1; opacity:.5;
+    background-image:linear-gradient(rgba(10,27,51,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(10,27,51,.05) 1px,transparent 1px);
+    background-size:44px 44px; mask-image:linear-gradient(180deg,#000 0%,transparent 85%);
+  }
+  .hero-eyebrow{display:flex; align-items:center; gap:10px; margin-bottom:22px;}
+  .hero-eyebrow .dot{width:6px; height:6px; background:var(--accent); border-radius:1px;}
+  h1.hero-title{
+    font-size:clamp(38px,6vw,72px); font-weight:800; letter-spacing:-0.04em; line-height:1.02;
+    margin:0 0 22px; color:var(--ink); max-width:15ch;
+  }
+  h1.hero-title em{font-style:normal; color:var(--accent-2);}
+  .hero-desc{font-size:16.5px; line-height:1.6; color:var(--charcoal-2); max-width:52ch; margin:0 0 34px;}
+  .hero-cta{display:flex; align-items:center; gap:16px; flex-wrap:wrap;}
+  .hero-cta .btn-primary{padding:14px 26px; font-size:14px;}
+  .hero-meta{margin-top:56px; display:flex; gap:38px; flex-wrap:wrap; border-top:1px solid var(--line); padding-top:22px;}
+  .hero-meta .m-val{font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:13.5px; color:var(--ink);}
+  .hero-meta .m-lbl{font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--charcoal-3); margin-top:3px;}
+
+  .hero-frame{margin-top:64px; position:relative;}
+  .hero-frame img{width:100%; border:1px solid var(--line); border-radius:4px; box-shadow:0 24px 60px -30px rgba(7,18,36,.28);}
+  .hero-frame figcaption{margin-top:12px; font-size:11.5px; color:var(--charcoal-3);}
+  .hero-frame figcaption .idx{font-family:'IBM Plex Mono',monospace; color:var(--accent-2); margin-right:8px;}
+
+  /* ---------- SECTION SHELL ---------- */
+  section{padding:88px 0;}
+  section.alt{background:var(--surface-2); border-top:1px solid var(--line); border-bottom:1px solid var(--line);}
+  .sec-head{max-width:640px; margin-bottom:48px;}
+  .sec-head .label{margin-bottom:14px;}
+  .sec-head h2{font-size:clamp(24px,3vw,34px); font-weight:800; letter-spacing:-0.03em; margin:0 0 14px; color:var(--ink);}
+  .sec-head p{font-size:14.5px; line-height:1.65; color:var(--charcoal-2); margin:0;}
+
+  /* problem / solution */
+  .split{display:grid; grid-template-columns:1fr 1fr; gap:56px; align-items:start;}
+  .split h3{font-size:13px; letter-spacing:.02em; margin:0 0 10px; color:var(--ink);}
+  .split p{font-size:14px; line-height:1.7; color:var(--charcoal-2); margin:0;}
+
+  /* capability grid */
+  .cap-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--line); border:1px solid var(--line);}
+  .cap-card{background:var(--surface); padding:26px 24px; min-height:168px; display:flex; flex-direction:column; gap:10px;}
+  .cap-card .n{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--accent-2); font-weight:600;}
+  .cap-card h4{font-size:14.5px; font-weight:700; letter-spacing:-0.015em; margin:0; color:var(--ink);}
+  .cap-card p{font-size:12.5px; line-height:1.6; color:var(--charcoal-3); margin:0;}
+
+  /* gallery */
+  .gallery{display:grid; grid-template-columns:1.4fr 1fr; gap:2px; background:var(--line); border:1px solid var(--line);}
+  .gallery figure{margin:0; background:var(--surface); overflow:hidden; position:relative;}
+  .gallery figure.big{grid-row:span 2;}
+  .gallery img{width:100%; height:100%; object-fit:cover; display:block;}
+  .gallery figcaption{
+    position:absolute; left:0; right:0; bottom:0; padding:12px 14px;
+    background:linear-gradient(0deg,rgba(7,18,36,.82),transparent);
+    color:#fff; font-size:11.5px; font-weight:600; display:flex; align-items:center; gap:8px;
+  }
+  .gallery figcaption .idx{font-family:'IBM Plex Mono',monospace; color:var(--mint); font-weight:500;}
+
+  /* workflow */
+  .workflow{list-style:none; margin:0; padding:0; display:grid; grid-template-columns:repeat(4,1fr); gap:0; border-top:1px solid var(--line);}
+  .workflow li{padding:26px 22px 26px 0; border-right:1px solid var(--line); position:relative;}
+  .workflow li:last-child{border-right:none;}
+  .workflow .step-n{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--accent-2); font-weight:600; display:block; margin-bottom:12px;}
+  .workflow h4{font-size:13.5px; font-weight:700; margin:0 0 8px; color:var(--ink);}
+  .workflow p{font-size:12px; line-height:1.6; color:var(--charcoal-3); margin:0;}
+
+  /* tech highlights */
+  .tech-list{display:grid; grid-template-columns:repeat(2,1fr); gap:14px 40px; margin:0; padding:0;}
+  .tech-list li{list-style:none; display:flex; gap:12px; align-items:baseline; font-size:13px; color:var(--charcoal-2); padding:14px 0; border-bottom:1px solid var(--line);}
+  .tech-list .tag{font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--accent-2); flex:none; width:64px;}
+
+  /* final cta */
+  .cta-block{background:var(--ink); color:#fff; padding:80px 0; text-align:center;}
+  .cta-block h2{font-size:clamp(26px,4vw,42px); font-weight:800; letter-spacing:-0.03em; margin:0 0 18px;}
+  .cta-block p{color:#B9C3CE; font-size:14.5px; margin:0 0 34px;}
+  .cta-block .btn-primary{background:var(--accent);}
+  .cta-block .btn-primary:hover{background:var(--mint); color:var(--ink);}
+
+  footer{padding:34px 0; border-top:1px solid var(--line);}
+  .foot-row{display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px;}
+  .foot-row .label{margin:0;}
+
+  @media (max-width:920px){
+    .split{grid-template-columns:1fr; gap:34px;}
+    .cap-grid{grid-template-columns:repeat(2,1fr);}
+    .gallery{grid-template-columns:1fr;}
+    .gallery figure.big{grid-row:auto;}
+    .workflow{grid-template-columns:repeat(2,1fr);}
+    .workflow li{border-bottom:1px solid var(--line);}
+    .tech-list{grid-template-columns:1fr;}
+    .nav-links{display:none;}
+  }
+  @media (max-width:560px){
+    .cap-grid{grid-template-columns:1fr;}
+    .workflow{grid-template-columns:1fr;}
+    .hero{padding:120px 0 60px;}
+    .wrap{padding:0 18px;}
+  }
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+    *{animation-duration:.001ms !important; transition-duration:.001ms !important;}
+  }
+
+  /* restrained entrance — one pass, no loops */
+  .reveal{opacity:0; transform:translateY(10px); animation:reveal .5s ease forwards;}
+  .reveal.d1{animation-delay:.06s;} .reveal.d2{animation-delay:.12s;} .reveal.d3{animation-delay:.18s;}
+  @keyframes reveal{to{opacity:1; transform:none;}}
+</style>
 </head>
 <body>
 
-<div class="app-bg"></div>
+<nav class="nav">
+  <a href="#top" class="nav-brand" aria-label="ZKR Atelier home">
+    <span class="nav-logo"><img src="public/logo/zkr.jpg" alt="ZKR logo" width="30" height="30"></span>
+    <span>
+      <span class="nav-word" style="display:block;">ZKR / ATELIER</span>
+      <span class="nav-sub">Planning Instrument</span>
+    </span>
+  </a>
+  <div class="nav-links">
+    <a href="#capabilities">Capabilities</a>
+    <a href="#preview">Preview</a>
+    <a href="#workflow">Workflow</a>
+    <a href="#stack">Stack</a>
+  </div>
+  <a class="btn btn-primary" href="app.html">Enter Workspace</a>
+</nav>
 
-<div class="app">
-  <!-- TOP BAR -->
-  <header class="topbar">
-    <div class="flex items-center gap-5">
-      <button class="btn btn-icon panel-toggle" id="leftPanelToggle" aria-label="Open templates and furniture panel" aria-expanded="false" aria-controls="leftPanel">
-        <i class="fa-solid fa-bars" aria-hidden="true"></i>
-      </button>
-      <div class="brand-lockup flex items-center gap-2.5">
-        <div class="logo-mark" aria-hidden="true">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-linecap="round" style="left:0;top:0;right:0;bottom:0;margin:auto;">
-            <path d="M3 3h7v7H3zM14 3h7v7h-7zM3 14h7v7H3zM14 14h7v7h-7z" stroke="#F5F1EA" stroke-width="1.6"/>
-            <path d="M14 14h7v7h-7z" fill="var(--accent, #17B6C4)" stroke="none"/>
-          </svg>
-        </div>
-        <div>
-          <div class="font-display font-bold text-[15px] leading-none">ZKR / ATELIER</div>
-          <div class="text-[9px] tracking-[0.18em] uppercase mt-0.5" style="color: var(--charcoal-3);">Planning Instrument</div>
-        </div>
+<main id="top">
+  <header class="hero">
+    <div class="hero-grid" aria-hidden="true"></div>
+    <div class="wrap">
+      <div class="hero-eyebrow reveal">
+        <span class="dot" aria-hidden="true"></span>
+        <span class="label">Real‑time spatial planning instrument</span>
       </div>
-      
-      <div class="h-7 w-px" style="background: var(--line);"></div>
-
-      <div class="nav-selector-group">
-        <div class="nav-selector" id="projectSelector" title="Click to rename project">
-          <span class="nav-selector-label" data-i18n="nav.project">Project</span>
-          <span class="nav-selector-value" id="projectName" contenteditable="true" spellcheck="false">Canal House Café</span>
-        </div>
-        <div class="nav-selector nav-selector--dropdown" id="templateSelector" tabindex="0" role="button" aria-haspopup="listbox" aria-expanded="false" title="Switch scenario template">
-          <span class="nav-selector-label" data-i18n="nav.template">Template</span>
-          <span class="nav-selector-value" id="templateBadge">Cafe</span>
-          <i class="fa-solid fa-chevron-down nav-selector-caret" aria-hidden="true"></i>
-          <div class="nav-dropdown-menu" id="templateDropdownMenu" role="listbox"></div>
-        </div>
+      <h1 class="hero-title reveal d1">Design, measure and verify a floor plan <em>in one workspace.</em></h1>
+      <p class="hero-desc reveal d2">
+        ZKR Atelier is a browser-based 3D planning tool for laying out commercial interiors —
+        place furniture and objects on a real floor plate, check clearances and egress against
+        set thresholds as you work, measure distances, estimate cost, and export a client-ready
+        report — without leaving the scene.
+      </p>
+      <div class="hero-cta reveal d3">
+        <a class="btn btn-primary" href="app.html">Enter Workspace →</a>
+        <a class="btn btn-ghost" href="#preview">See it in use</a>
       </div>
-    </div>
-
-    <div class="nav-cluster-group">
-      <div class="view-toggle" id="viewToggle">
-        <button data-view="perspective" class="active" title="3D Perspective view">
-          <i class="fa-solid fa-cube text-[10px]" aria-hidden="true"></i><span data-i18n="view.perspective">3D Perspective</span>
-        </button>
-        <button data-view="city" title="City Overview">
-          <i class="fa-solid fa-city text-[10px]" aria-hidden="true"></i><span data-i18n="view.city">City Overview</span>
-        </button>
-        <button data-view="top" title="Floor Plan view">
-          <i class="fa-solid fa-vector-square text-[10px]" aria-hidden="true"></i><span data-i18n="view.floor">Floor Plan</span>
-        </button>
+      <div class="hero-meta reveal d3">
+        <div><div class="m-val">Three.js</div><div class="m-lbl">Real‑time 3D engine</div></div>
+        <div><div class="m-val">⌘K</div><div class="m-lbl">Command palette</div></div>
+        <div><div class="m-val">PDF</div><div class="m-lbl">Exportable report</div></div>
+        <div><div class="m-val">Esc</div><div class="m-lbl">Presentation mode</div></div>
       </div>
 
-      <div class="nav-divider" aria-hidden="true"></div>
-
-      <div class="nav-brand-swatch" title="Brand color">
-        <span class="nav-mini-label">Brand</span>
-        <div class="color-input-wrap" id="colorWrap" style="background: var(--accent);">
-          <label for="brandColor" class="sr-only">Brand color picker</label>
-          <input type="color" id="brandColor" value="#17B6C4" aria-label="Brand color">
-        </div>
-      </div>
-
-      <div class="nav-divider" aria-hidden="true"></div>
-
-      <div class="nav-action-group" role="group" aria-label="Analysis and export tools">
-        <button class="btn nav-action" id="fireSafetyBtn" aria-label="Toggle fire egress view" title="Show fire egress paths and compliance">
-          <i class="fa-solid fa-route text-[11px]" aria-hidden="true"></i>
-          <span data-i18n="nav.fireEgress">Fire Egress</span>
-        </button>
-
-        <button class="btn nav-action" id="costBtn" aria-label="Open cost estimate" title="Open cost breakdown">
-          <i class="fa-solid fa-calculator text-[11px]" aria-hidden="true"></i>
-          <span data-i18n="nav.costEstimate">Cost Estimate</span>
-        </button>
-
-        <button class="btn btn-primary nav-action" id="exportBtn" aria-label="Export PDF" title="Export layout as PDF">
-          <i class="fa-solid fa-file-arrow-down text-[11px]" aria-hidden="true"></i>
-          <span data-i18n="nav.exportPdf">Export PDF</span>
-        </button>
-      </div>
-
-      <div class="nav-divider" aria-hidden="true"></div>
-
-      <div class="topbar-util-group" aria-label="View utilities">
-        <button class="btn btn-icon topbar-util-btn" id="topbarLayersBtn" title="Toggle analytics panel" aria-label="Toggle layers panel">
-          <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
-        </button>
-        <button class="btn btn-icon topbar-util-btn" id="topbarFullscreenBtn" title="Toggle fullscreen" aria-label="Toggle fullscreen">
-          <i class="fa-solid fa-expand" aria-hidden="true"></i>
-        </button>
-        <button class="btn btn-icon topbar-util-btn" id="topbarHelpBtn" title="Keyboard shortcuts (?)" aria-label="Keyboard shortcuts">
-          <i class="fa-solid fa-question" aria-hidden="true"></i>
-        </button>
-      </div>
-
-      <div class="nav-divider" aria-hidden="true"></div>
-
-      <div class="nav-selector nav-selector--dropdown nav-selector--lang" id="langSelector" tabindex="0" role="button" aria-haspopup="listbox" aria-expanded="false" title="Language">
-        <i class="fa-solid fa-globe text-[11px]" aria-hidden="true"></i>
-        <span class="nav-selector-value" id="langValue">EN</span>
-        <div class="nav-dropdown-menu nav-dropdown-menu--lang" id="langDropdownMenu" role="listbox">
-          <button data-lang="en" role="option" aria-selected="true">English</button>
-          <button data-lang="fr" role="option">Français</button>
-          <button data-lang="ar" role="option">العربية</button>
-          <button data-lang="ary" role="option" disabled title="Coming soon">الدارجة <span class="lang-soon">soon</span></button>
-          <button data-lang="es" role="option" disabled title="Coming soon">Español <span class="lang-soon">soon</span></button>
-          <button data-lang="de" role="option" disabled title="Coming soon">Deutsch <span class="lang-soon">soon</span></button>
-          <button data-lang="pt" role="option" disabled title="Coming soon">Português <span class="lang-soon">soon</span></button>
-        </div>
-      </div>
-
-      <div class="notif-wrap" id="notifWrap">
-        <button class="btn btn-icon" id="notifBtn" aria-label="Notifications" aria-haspopup="true" aria-expanded="false" title="Notifications">
-          <i class="fa-solid fa-bell" aria-hidden="true"></i>
-          <span class="notif-dot" id="notifDot" hidden></span>
-        </button>
-        <div class="nav-dropdown-menu nav-dropdown-menu--notif" id="notifMenu" role="menu">
-          <div class="notif-menu-header">
-            <span class="notif-menu-title" data-i18n="notif.title">Activity</span>
-            <button class="notif-clear-btn" id="notifClearBtn" data-i18n="notif.clear">Clear all</button>
-          </div>
-          <div class="notif-menu-list" id="notifList"></div>
-        </div>
-      </div>
-
-      <div class="save-status" id="saveStatus" title="All changes are saved to this browser only — no account, no server. Clearing browser data will lose the project.">
-        <span class="save-status-dot"></span><span id="saveStatusText">Saved</span>
-      </div>
-
-      <button class="btn btn-icon panel-toggle" id="rightPanelToggle" aria-label="Open capacity and costing panel" aria-expanded="false" aria-controls="rightPanel" title="Capacity panel">
-        <i class="fa-solid fa-sliders" aria-hidden="true"></i>
-      </button>
+      <figure class="hero-frame reveal">
+        <img src="screens/3dperspective.JPG" alt="ZKR Atelier 3D perspective view of a city block with buildings, a live inspector panel and analytics sidebar" width="1920" height="947" loading="eager">
+        <figcaption><span class="idx">01 / 3D PERSPECTIVE</span>Real-time scene — floor area, capacity and compliance readouts update as the layout changes.</figcaption>
+      </figure>
     </div>
   </header>
 
-  <!-- BREADCRUMB / WORKFLOW TRAIL -->
-  <div class="breadcrumb-bar" id="breadcrumbBar" aria-label="Project workflow location">
-    <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
-    <span id="breadcrumbTrail">ZKR CITY / CANAL QUARTER / Canal House Café / DESIGN WORKSPACE</span>
-    <div class="mode-switch" role="group" aria-label="Working mode">
-      <button type="button" data-mode="design" class="active" aria-pressed="true" title="Design mode — place and edit"><i class="fa-solid fa-pen-ruler" aria-hidden="true"></i><span>Design</span></button>
-      <button type="button" data-mode="inspect" aria-pressed="false" title="Inspection mode (I) — collisions, clearances, compliance"><i class="fa-solid fa-magnifying-glass-location" aria-hidden="true"></i><span>Inspect</span></button>
-      <button type="button" data-mode="present" aria-pressed="false" title="Presentation mode (P) — scene only"><i class="fa-solid fa-display" aria-hidden="true"></i><span>Present</span></button>
-    </div>
-    <button type="button" class="palette-btn" id="paletteBtn" title="Command palette (Ctrl/⌘ K)" aria-label="Open command palette"><i class="fa-solid fa-terminal" aria-hidden="true"></i><span>Commands</span><kbd>Ctrl K</kbd></button>
-  </div>
-
-  <!-- WORKSPACE -->
-  <div class="workspace">
-    <!-- DARK ICON RAIL -->
-    <nav class="icon-rail" aria-label="Tools">
-      <button class="icon-rail-btn active" id="railCatalogBtn" title="Furniture catalog" aria-label="Furniture catalog" data-tip="Catalog">
-        <i class="fa-solid fa-cubes-stacked" aria-hidden="true"></i>
-      </button>
-      <button class="icon-rail-btn" id="gridToggleBtn" title="Toggle planning grid (G)" aria-label="Toggle grid" data-tip="Grid">
-        <i class="fa-solid fa-border-all" aria-hidden="true"></i>
-      </button>
-      <button class="icon-rail-btn" id="measureToggleBtn" title="Measure distance" aria-label="Measure tool" data-tip="Measure">
-        <i class="fa-solid fa-ruler" aria-hidden="true"></i>
-      </button>
-      <button class="icon-rail-btn" id="railLayersBtn" title="Toggle analytics panel" aria-label="Toggle analytics panel" data-tip="Analytics">
-        <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
-      </button>
-      <button class="icon-rail-btn" id="railCostRailBtn" title="Cost estimate" aria-label="Cost estimate" data-tip="Cost">
-        <i class="fa-solid fa-calculator" aria-hidden="true"></i>
-      </button>
-      <button class="icon-rail-btn active" id="postFxToggleBtn" title="Toggle realistic rendering (SSAO + bloom)" aria-label="Toggle realistic rendering" data-tip="Render FX">
-        <i class="fa-solid fa-sparkles" aria-hidden="true"></i>
-      </button>
-      <button class="icon-rail-btn" id="firstPersonBtn" title="Walkthrough mode — WASD to move, mouse to look, Esc to exit" aria-label="First-person walkthrough" data-tip="Walkthrough">
-        <i class="fa-solid fa-person-walking" aria-hidden="true"></i>
-      </button>
-      <div class="icon-rail-btn icon-rail-btn--quality" id="qualitySelector" tabindex="0" role="button" aria-haspopup="listbox" aria-expanded="false" title="Rendering quality" data-tip="Quality">
-        <i class="fa-solid fa-gauge-high" aria-hidden="true"></i>
-        <div class="nav-dropdown-menu" id="qualityDropdownMenu" role="listbox" style="left: 100%; top: 0; margin-left: 8px;">
-          <button data-quality="ultra" role="option">Ultra</button>
-          <button data-quality="high" role="option" class="active" aria-selected="true">High</button>
-          <button data-quality="medium" role="option">Medium</button>
-          <button data-quality="low" role="option">Low</button>
-        </div>
-      </div>
-      <div class="icon-rail-spacer"></div>
-      <button class="icon-rail-btn" id="railHelpBtn" title="Keyboard shortcuts (?)" aria-label="Keyboard shortcuts" data-tip="Shortcuts">
-        <i class="fa-solid fa-question" aria-hidden="true"></i>
-      </button>
-    </nav>
-    <!-- LEFT PANEL -->
-    <aside class="panel panel-left" id="leftPanel">
-      <button class="rail-collapse-btn" id="leftRailCollapse" type="button" aria-label="Collapse templates panel" aria-expanded="true" title="Collapse panel">
-        <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
-      </button>
-      <div class="rail-resizer" id="leftRailResizer" role="separator" aria-orientation="vertical" aria-label="Resize templates panel"></div>
-      <div class="panel-section">
-        <div class="panel-title">
-          <span>Scenario Templates</span>
-          <i class="fa-solid fa-grip text-[10px]" style="color: var(--charcoal-3);"></i>
-        </div>
-        <div class="chip-row" id="templateCategoryTabs"></div>
-        <div class="grid grid-cols-2 gap-2" id="templateGrid"></div>
-      </div>
-      
-      <div class="panel-section scroll">
-        <div class="panel-title">
-          <span>Furniture &amp; Objects</span>
-          <span class="text-[9px] font-normal" style="color: var(--charcoal-3); text-transform: none; letter-spacing: 0;">click → place</span>
-        </div>
-        <div class="chip-row" id="furnitureCategoryTabs"></div>
-        <div class="space-y-1.5" id="itemLibrary"></div>
-      </div>
-    </aside>
-    
-    <!-- CENTER: Canvas -->
-    <section class="canvas-container blueprint-grid" id="canvasContainer">
-      <div class="viewport-vignette" aria-hidden="true"></div>
-      <!-- Floating HUDs -->
-      <div class="hud hud-tl">
-        <div class="flex items-center gap-3">
-          <div>
-            <div class="text-[9px] uppercase tracking-[0.16em]" style="color: var(--charcoal-3);">Floor Area</div>
-            <div class="font-display font-bold text-sm mt-0.5" id="areaStat">120 m² <span class="font-mono text-[10px] font-normal" style="color: var(--charcoal-3);">/ 1,292 ft²</span></div>
-          </div>
-          <div class="h-7 w-px" style="background: var(--line);"></div>
-          <div>
-            <div class="text-[9px] uppercase tracking-[0.16em]" style="color: var(--charcoal-3);">Dimensions</div>
-            <div class="font-mono text-xs mt-0.5">12.0 × 10.0 m</div>
-          </div>
-          <div class="h-7 w-px" style="background: var(--line);"></div>
-          <div>
-            <div class="text-[9px] uppercase tracking-[0.16em]" style="color: var(--charcoal-3);">Ceiling</div>
-            <div class="font-mono text-xs mt-0.5">3.4 m</div>
-          </div>
-        </div>
-      </div>
-      
-      <div class="hud hud-tr">
-        <div class="flex items-center gap-3 text-[11px]">
-          <span class="flex items-center gap-2">
-            <span class="w-1.5 h-1.5 rounded-full" style="background: var(--success); box-shadow: 0 0 0 3px rgba(107, 142, 78, 0.2);"></span>
-            <span style="color: var(--charcoal-3);">Auto-saved</span>
-          </span>
-          <span style="color: var(--line);">|</span>
-          <span class="font-mono" id="itemCount">0 items</span>
-          <span style="color: var(--line);">|</span>
-          <div class="hud-toggle" id="cityToggle">
-            <span style="color: var(--charcoal-3);">City</span>
-            <div class="mini-switch on" id="cityToggleSwitch"></div>
-          </div>
-        </div>
-      </div>
-      
-      <div class="hud hud-bc tool-dock">
-        <div class="tool-group" role="group" aria-label="History">
-          <button class="btn-icon btn tool-btn" id="undoBtn" title="Undo (Ctrl+Z)" aria-label="Undo"><i class="fa-solid fa-rotate-left" aria-hidden="true"></i></button>
-          <button class="btn-icon btn tool-btn" id="redoBtn" title="Redo (Ctrl+Shift+Z)" aria-label="Redo"><i class="fa-solid fa-rotate-right" aria-hidden="true"></i></button>
-        </div>
-        <div class="tool-divider" role="separator" aria-hidden="true"></div>
-        <div class="tool-group" role="group" aria-label="Camera">
-          <button class="btn-icon btn tool-btn" id="zoomIn" title="Zoom in" aria-label="Zoom in"><i class="fa-solid fa-plus" aria-hidden="true"></i></button>
-          <button class="btn-icon btn tool-btn" id="zoomOut" title="Zoom out" aria-label="Zoom out"><i class="fa-solid fa-minus" aria-hidden="true"></i></button>
-          <button class="btn-icon btn tool-btn" id="resetView" title="Reset view" aria-label="Reset camera view"><i class="fa-solid fa-house" aria-hidden="true"></i></button>
-        </div>
-        <div class="tool-divider" role="separator" aria-hidden="true"></div>
-        <div class="tool-group" role="group" aria-label="Selected item">
-          <button class="btn-icon btn tool-btn" id="rotateLeft" title="Rotate selected left" aria-label="Rotate selected item left"><i class="fa-solid fa-arrow-rotate-left" aria-hidden="true"></i></button>
-          <button class="btn-icon btn tool-btn" id="rotateRight" title="Rotate selected right" aria-label="Rotate selected item right"><i class="fa-solid fa-arrow-rotate-right" aria-hidden="true"></i></button>
-          <button class="btn-icon btn tool-btn tool-btn--danger" id="deleteSelected" title="Delete selected (Del)" aria-label="Delete selected item"><i class="fa-solid fa-eraser" aria-hidden="true"></i></button>
-        </div>
-        <div class="tool-divider" role="separator" aria-hidden="true"></div>
-        <div class="tool-group" role="group" aria-label="Inspection">
-          <button class="btn-icon btn tool-btn" id="overlayToggleBtn" title="Compliance overlay (O)" aria-label="Toggle compliance overlay" aria-pressed="false"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i></button>
-        </div>
-        <div class="tool-divider" role="separator" aria-hidden="true"></div>
-        <div class="tool-group" role="group" aria-label="Scene">
-          <button class="btn-icon btn tool-btn tool-btn--danger" id="clearBtn" title="Clear all placed items" aria-label="Clear all placed items"><i class="fa-solid fa-trash" aria-hidden="true"></i></button>
-        </div>
-      </div>
-      
-      <div class="hud hud-bl">
-        <div class="text-[9px] uppercase tracking-[0.16em] mb-1" style="color: var(--charcoal-3);">Capacity</div>
-        <div class="flex items-baseline gap-1.5">
-          <span class="font-display font-black text-[28px] leading-none" id="capacityCount" style="color: var(--charcoal);">0</span>
-          <span class="text-[11px]" style="color: var(--charcoal-3);">/ <span id="capacityMax">40</span> seats</span>
-        </div>
-        <div class="mt-1.5 flex items-center gap-2">
-          <div class="meter" style="width: 120px;"><div class="meter-fill" id="capacityBar" style="width: 0%;"></div></div>
-          <span class="text-[10px] font-mono" id="capacityPct" style="color: var(--charcoal-3);">0%</span>
-        </div>
-      </div>
-      
-      <!-- Real-time cost pill: total + the cost impact of the latest action -->
-      <button type="button" class="cost-pill is-empty" id="costPill" title="Open cost estimate (C)" aria-label="Estimated total. Open cost estimate.">
-        <span class="cp-label">Est. total</span><b class="cp-total" data-f="total">$0</b>
-        <span class="cp-delta" data-f="delta" data-dir="up"></span><span class="cp-why" data-f="why"></span>
-      </button>
-      <div class="sp-legend" id="spLegend" aria-label="Compliance overlay legend">
-        <span><i class="lg-ok"></i>Compliant</span><span><i class="lg-warn"></i>Tight &lt; 0.90 m</span><span><i class="lg-crit"></i>Insufficient &lt; 0.50 m</span><span><i class="lg-coll"></i>Collision</span>
-      </div>
-      <div class="present-summary" id="presentSummary" hidden></div>
-      <div class="present-bar" id="presentBar" role="toolbar" aria-label="Presentation controls">
-        <button type="button" data-view="perspective" class="active"><i class="fa-solid fa-cube" aria-hidden="true"></i><span>Interior</span></button>
-        <button type="button" data-view="top"><i class="fa-solid fa-vector-square" aria-hidden="true"></i><span>Plan</span></button>
-        <button type="button" data-view="city"><i class="fa-solid fa-city" aria-hidden="true"></i><span>City</span></button>
-        <i class="pb-sep" aria-hidden="true"></i>
-        <button type="button" id="presentWalkBtn" title="First-person walkthrough"><i class="fa-solid fa-person-walking" aria-hidden="true"></i><span>Walk</span></button>
-        <button type="button" id="presentSummaryToggle" class="active" title="Toggle project summary"><i class="fa-solid fa-circle-info" aria-hidden="true"></i><span>Summary</span></button>
-        <i class="pb-sep" aria-hidden="true"></i>
-        <button type="button" id="presentExit" class="pb-exit" title="Exit presentation (Esc)"><i class="fa-solid fa-xmark" aria-hidden="true"></i><span>Exit</span><kbd>Esc</kbd></button>
-      </div>
-
-      <!-- Floor plan overlay (shown only in top view) -->
-      <div class="floorplan-overlay" id="floorplanOverlay"></div>
-      <div class="fp-crosshair" aria-hidden="true"></div>
-      <div class="fp-hint" aria-hidden="true">
-        <span><b>W A S D</b> move</span><span><b>MOUSE</b> look</span><span><b>SHIFT</b> run</span><span><b>ESC</b> exit</span>
-      </div>
-      <div class="viewport-datum"><span>DATUM / 00.000</span></div>
-      <div class="viewport-readout" id="viewportReadout"><b>CAM</b> · INTERIOR / 40MM</div>
-      <div class="city-ops" id="cityOps">
-        <div class="city-ops-head"><span>ZKR City</span><b id="cityClock">10:30</b></div>
-        <div class="city-ops-grid">
-          <button data-city-scale="city"><i class="fa-solid fa-globe"></i>Read city</button>
-          <button data-city-scale="district"><i class="fa-solid fa-map"></i>Read district</button>
-          <button data-city-scale="street"><i class="fa-solid fa-road"></i>Read street</button>
-          <button id="cityBuildBtn"><i class="fa-solid fa-compass-drafting"></i>Set plot</button>
-        </div>
-        <div class="city-cityline"><span id="cityPhase">DAY / ACTIVE</span><strong id="cityActivityShort">78%</strong></div>
-      </div>
-      <div class="city-stat-ribbon" id="cityStatRibbon">
-        <div class="city-stat"><span>Residents</span><strong id="cityPopulation">0</strong></div>
-        <div class="city-stat"><span>Buildings</span><strong id="cityBuildingsCount">0</strong></div>
-        <div class="city-stat"><span>Activity</span><strong><em id="cityActivityPct">0</em>%</strong></div>
-      </div>
-      <div class="city-district-strip" id="cityDistrictStrip"></div>
-    </section>
-    
-    <!-- RIGHT PANEL -->
-    <aside class="panel panel-right" id="rightPanel">
-      <button class="rail-collapse-btn rail-collapse-btn--right" id="rightRailCollapse" type="button" aria-label="Collapse capacity panel" aria-expanded="true" title="Collapse panel">
-        <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
-      </button>
-      <div class="rail-resizer rail-resizer--right" id="rightRailResizer" role="separator" aria-orientation="vertical" aria-label="Resize capacity panel"></div>
-
-      <section class="panel-section inspector-section" id="inspectorSection" aria-label="Inspector" aria-live="polite">
-        <div class="panel-title"><span>Inspector</span><span class="inspector-context" id="inspectorContext">No selection</span></div>
-        <div id="inspectorBody" class="inspector-body"></div>
-      </section>
-
-      <div class="panel-section analytics-card">
-        <div class="panel-title">
-          <span data-i18n="panel.performance">Performance &amp; Analytics</span>
-          <i class="fa-solid fa-chart-line text-[10px]" style="color: var(--charcoal-3);"></i>
-        </div>
-        <div class="compliance-row">
-          <span class="compliance-icon" id="complianceEgressIcon"><i class="fa-solid fa-circle-check" aria-hidden="true"></i></span>
-          <span class="compliance-label" data-i18n="compliance.fireEgress">Fire egress</span>
-          <span class="compliance-value" id="complianceEgressValue" data-i18n="compliance.compliant">Compliant</span>
-        </div>
-        <div class="compliance-row">
-          <span class="compliance-icon" id="complianceCapacityIcon"><i class="fa-solid fa-circle-check" aria-hidden="true"></i></span>
-          <span class="compliance-label" data-i18n="compliance.capacity">Capacity</span>
-          <span class="compliance-value" id="complianceCapacityValue" data-i18n="compliance.withinLimit">Within limit</span>
-        </div>
-        <div class="compliance-row">
-          <span class="compliance-icon" id="complianceAccessIcon"><i class="fa-solid fa-circle-check" aria-hidden="true"></i></span>
-          <span class="compliance-label" data-i18n="compliance.accessibility">Accessibility</span>
-          <span class="compliance-value" id="complianceAccessValue" data-i18n="compliance.compliant">Compliant</span>
-        </div>
-        <div class="analytics-divider"></div>
-        <div class="financial-row">
-          <span class="financial-label" data-i18n="financial.cost">Estimated cost</span>
-          <span class="financial-value" id="analyticsCostTotal">$0</span>
-        </div>
-        <div class="financial-row">
-          <span class="financial-label" data-i18n="financial.furniture">Furniture subtotal</span>
-          <span class="financial-value financial-value--muted" id="analyticsFurnitureSubtotal">$0</span>
-        </div>
-        <div class="financial-row">
-          <span class="financial-label" data-i18n="financial.builtValue">Built value</span>
-          <span class="financial-value financial-value--muted" id="analyticsBuiltValue">$0</span>
-        </div>
-        <div class="financial-fit-track" aria-hidden="true"><div class="financial-fit-bar" id="financialFitBar"></div></div>
-        <div class="analytics-divider"></div>
-        <div class="score-ring-row">
-          <div class="score-ring">
-            <svg width="54" height="54" viewBox="0 0 54 54">
-              <circle class="score-ring-track" cx="27" cy="27" r="23"></circle>
-              <circle class="score-ring-fill" id="scoreRingFill" cx="27" cy="27" r="23" stroke-dasharray="144.5" stroke-dashoffset="144.5"></circle>
-            </svg>
-            <div class="score-ring-value" id="scoreRingValue">0</div>
-          </div>
-          <div class="score-ring-label"><span data-i18n="score.label">Project score</span><b id="spaceEfficiencyStat">0% efficient</b></div>
-        </div>
-      </div>
-
-      <div class="panel-section">
-        <div class="panel-title">
-          <span data-i18n="panel.insight">Design Intelligence</span>
-          <i class="fa-solid fa-wand-magic-sparkles text-[10px]" style="color: var(--charcoal-3);"></i>
-        </div>
-        <div class="insight-card" id="insightCard">
-          <div class="insight-empty"><i class="fa-solid fa-wand-magic-sparkles" aria-hidden="true"></i><span data-i18n="insight.empty">Add furniture to see live layout suggestions.</span></div>
-        </div>
-      </div>
-
-      <div class="panel-section" data-ctx="design">
-        <div class="panel-title">
-          <span data-i18n="panel.lighting">Lighting</span>
-          <i class="fa-solid fa-sun text-[10px]" style="color: var(--charcoal-3);"></i>
-        </div>
-        <div class="light-preset-row" id="lightPresetRow">
-          <button class="light-preset-btn" data-preset="morning"><i class="fa-solid fa-cloud-sun"></i><span data-i18n="light.morning">Morning</span></button>
-          <button class="light-preset-btn" data-preset="afternoon"><i class="fa-solid fa-sun"></i><span data-i18n="light.noon">Noon</span></button>
-          <button class="light-preset-btn" data-preset="overcast"><i class="fa-solid fa-cloud"></i><span data-i18n="light.overcast">Overcast</span></button>
-          <button class="light-preset-btn" data-preset="golden"><i class="fa-solid fa-sun-plant-wilt"></i><span data-i18n="light.golden">Golden Hr</span></button>
-          <button class="light-preset-btn" data-preset="bluehour"><i class="fa-solid fa-cloud-moon"></i><span data-i18n="light.bluehour">Blue Hr</span></button>
-          <button class="light-preset-btn" data-preset="evening"><i class="fa-solid fa-cloud-moon"></i><span data-i18n="light.evening">Evening</span></button>
-          <button class="light-preset-btn" data-preset="night"><i class="fa-solid fa-moon"></i><span data-i18n="light.night">Night</span></button>
-          <button class="light-preset-btn active" data-preset="live"><i class="fa-solid fa-play"></i><span data-i18n="light.live">Live</span></button>
-        </div>
-      </div>
-
-      <div class="panel-section">
-        <div class="panel-title">
-          <span>Capacity Planner</span>
-          <i class="fa-solid fa-people-group text-[10px]" style="color: var(--charcoal-3);"></i>
-        </div>
-        
-        <div class="mb-3">
-          <div class="flex justify-between text-[11px] mb-1.5">
-            <span style="color: var(--charcoal-3);">Occupancy</span>
-            <span class="font-mono"><span id="occPercent" class="font-semibold">0</span>% of max</span>
-          </div>
-          <div class="meter"><div class="meter-fill" id="occFill" style="width: 0%;"></div></div>
-        </div>
-        
-        <div class="space-y-0.5">
-          <div class="stat-row">
-            <span class="stat-label">Seats placed</span>
-            <span class="stat-value font-mono" id="seatsStat">0</span>
-          </div>
-          <div class="stat-row">
-            <span class="stat-label">Floor area</span>
-            <span class="stat-value font-mono" id="areaStatSmall">120 m²</span>
-          </div>
-          <div class="stat-row">
-            <span class="stat-label">Density</span>
-            <span class="stat-value font-mono"><span id="densityStat">0.00</span> /m²</span>
-          </div>
-          <div class="stat-row">
-            <span class="stat-label">Per seat</span>
-            <span class="stat-value font-mono"><span id="perSeatStat">—</span></span>
-          </div>
-        </div>
-      </div>
-      
-      <div class="panel-section" data-ctx="design">
-        <div class="stat-row" style="padding-bottom: 8px; border-bottom: 1px solid var(--line-soft);">
-          <span class="stat-label flex items-center gap-2">
-            <span class="w-1.5 h-1.5 rounded-full" id="egressDot" style="background: var(--success);"></span>
-            Fire egress
-          </span>
-          <span class="stat-value text-[12px]" id="egressStatus">Compliant</span>
-        </div>
-        <div class="text-[10px] mt-2 leading-relaxed" style="color: var(--charcoal-3);">
-          Door clearance 1.2 m. Max occupancy 1 person / 0.5 m² for assembly use.
-        </div>
-        <div class="scene-context" aria-label="ZKR neighborhood reference">
-          <svg class="scene-context-art" viewBox="0 0 300 106" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
-            <rect width="300" height="106" fill="#0E1B2C"/>
-            <rect x="0" y="0" width="300" height="106" fill="url(#skyFade)"/>
-            <g fill="#17324E">
-              <rect x="-10" y="52" width="46" height="54"/>
-              <rect x="34" y="30" width="38" height="76"/>
-              <rect x="70" y="46" width="34" height="60"/>
-              <rect x="238" y="38" width="36" height="68"/>
-              <rect x="272" y="58" width="40" height="48"/>
-            </g>
-            <g fill="#1F3A56">
-              <rect x="108" y="18" width="42" height="88"/>
-              <rect x="150" y="40" width="30" height="66"/>
-              <rect x="182" y="8" width="46" height="98"/>
-            </g>
-            <g fill="#17B6C4" opacity="0.9">
-              <rect x="118" y="30" width="5" height="7"/><rect x="130" y="30" width="5" height="7"/>
-              <rect x="118" y="44" width="5" height="7"/><rect x="130" y="44" width="5" height="7"/>
-              <rect x="192" y="22" width="5" height="7"/><rect x="205" y="22" width="5" height="7"/>
-              <rect x="192" y="38" width="5" height="7"/><rect x="205" y="38" width="5" height="7"/>
-            </g>
-            <rect x="0" y="102" width="300" height="4" fill="#0A1522"/>
-            <defs>
-              <linearGradient id="skyFade" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0" stop-color="#25486E" stop-opacity="0.55"/>
-                <stop offset="1" stop-color="#0E1B2C" stop-opacity="0"/>
-              </linearGradient>
-            </defs>
-          </svg>
-          <div class="scene-context-copy"><strong>District context</strong><span>CANAL / WEST BLOCK</span></div>
-        </div>
-      </div>
-      <div class="panel-section" data-ctx="design">
-        <div class="panel-title"><span>Spatial register</span><span class="city-mode-badge" id="cityModeBadge">Interior</span></div>
-        <div class="city-kpi-grid">
-          <div class="city-kpi"><span>Population</span><strong id="panelPopulation">0</strong></div>
-          <div class="city-kpi"><span>Built value</span><strong id="panelValue">$0</strong></div>
-          <div class="city-kpi"><span>Traffic</span><strong id="panelTraffic">0</strong></div>
-          <div class="city-kpi"><span>Cycle</span><strong id="panelCycle">Day</strong></div>
-        </div>
-        <div class="city-selection-card" id="citySelectionCard">
-          <button type="button" class="city-selection-close" id="closeCitySelection" aria-label="Clear selection"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
-          <strong id="citySelectionName">ZKR Atelier</strong>
-          <div class="city-selection-meta" id="citySelectionMeta">PLANNING STUDIO / CANAL QUARTER / LIVE</div>
-          <div class="city-selection-detail" id="citySelectionDetail">
-            <span>Program<b>Studio</b></span><span>Floors<b>2</b></span><span>Status<b>Live</b></span>
-          </div>
-        </div>
-        <p class="city-selection-empty" id="citySelectionEmpty">Click a building or pedestrian in the city view to inspect it.</p>
-        <div class="city-activity-list" id="cityActivityList"></div>
-      </div>
-      
-      <div class="panel-section" data-ctx="design">
-        <div class="panel-title">
-          <span>Brand Color</span>
-          <span class="font-mono text-[9px] font-semibold" id="brandHex" style="color: var(--accent-2); text-transform: none; letter-spacing: 0;">#17B6C4</span>
-        </div>
-        <div class="flex flex-wrap gap-1.5 mb-3">
-          <button type="button" class="swatch active" data-color="#17B6C4" style="background: #17B6C4;" aria-label="Terracotta brand color" aria-pressed="true"></button>
-          <button type="button" class="swatch" data-color="#3F6B5C" style="background: #3F6B5C;" aria-label="Forest green brand color" aria-pressed="false"></button>
-          <button type="button" class="swatch" data-color="#D49B3B" style="background: #D49B3B;" aria-label="Amber brand color" aria-pressed="false"></button>
-          <button type="button" class="swatch" data-color="#5B4A8C" style="background: #5B4A8C;" aria-label="Violet brand color" aria-pressed="false"></button>
-          <button type="button" class="swatch" data-color="#2A4A6B" style="background: #2A4A6B;" aria-label="Navy brand color" aria-pressed="false"></button>
-          <button type="button" class="swatch" data-color="#A8485E" style="background: #A8485E;" aria-label="Rose brand color" aria-pressed="false"></button>
-          <button type="button" class="swatch" data-color="#4A6741" style="background: #4A6741;" aria-label="Olive brand color" aria-pressed="false"></button>
-          <button type="button" class="swatch" data-color="#1F1F1F" style="background: #1F1F1F;" aria-label="Charcoal brand color" aria-pressed="false"></button>
-        </div>
-        <div class="text-[10px] leading-relaxed" style="color: var(--charcoal-3);">
-          Recolors counters, accent chairs, pendants, branding strips and shelving throughout the entire space — instantly.
-        </div>
-      </div>
-      
-      <div class="panel-section" data-ctx="design">
-        <div class="panel-title"><span>Live Costing</span></div>
-        <div class="flex items-baseline justify-between mb-3">
-          <span class="text-[11px]" style="color: var(--charcoal-3);">Estimated total</span>
-          <span class="font-display font-black text-2xl" id="liveTotal" style="color: var(--charcoal);">$0</span>
-        </div>
-        <button class="btn w-full justify-center" id="openCostBtn">
-          <i class="fa-solid fa-receipt text-[11px]"></i>
-          View breakdown
-        </button>
-      </div>
-      
-      <div class="panel-section scroll" data-ctx="design">
-        <div class="panel-title">
-          <span>Placed Items</span>
-          <span class="font-mono text-[9px] font-semibold" style="text-transform: none; letter-spacing: 0; color: var(--charcoal-3);" id="placedCount">0</span>
-        </div>
-        <div class="space-y-1.5" id="placedList">
-          <div class="placed-list-empty">
-            <i class="fa-solid fa-couch" aria-hidden="true"></i>
-            <span>No items yet.<br>Click a furniture piece<br>on the left to start.</span>
-          </div>
-        </div>
-      </div>
-    </aside>
-  </div>
-  <div class="panel-scrim" id="panelScrim"></div>
-</div>
-
-<!-- COST PANEL -->
-<div class="cost-panel" id="costPanel">
-  <div class="p-5 border-b" style="border-color: var(--line);">
-    <div class="flex items-center justify-between">
+  <!-- PROBLEM / SOLUTION -->
+  <section aria-labelledby="problem-h">
+    <div class="wrap split">
       <div>
-        <div class="font-display font-bold text-[17px]">Cost Estimate</div>
-        <div class="text-[11px] mt-0.5" style="color: var(--charcoal-3);">Furniture &amp; fixtures breakdown</div>
+        <h3 class="label" style="margin-bottom:14px;">The problem</h3>
+        <p>Early interior and site layout work is usually split across a floor-plan sketch, a
+          separate spreadsheet for code compliance and cost, and a rendering tool for client
+          presentation — three disconnected artifacts that drift out of sync the moment the
+          layout changes.</p>
       </div>
-      <button class="btn-icon btn" id="closeCost" aria-label="Close cost estimate panel"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
-    </div>
-  </div>
-  
-  <div class="flex-1 overflow-y-auto scroll-thin p-5" id="costContent"></div>
-  
-  <div class="p-5 border-t" style="border-color: var(--line); background: var(--surface-2);">
-    <div class="space-y-1 mb-3">
-      <div class="flex justify-between text-[11px]" style="color: var(--charcoal-3);">
-        <span>Subtotal</span>
-        <span class="font-mono" id="costSubtotal">$0</span>
-      </div>
-      <div class="flex justify-between text-[11px]" style="color: var(--charcoal-3);">
-        <span>Delivery &amp; install (12%)</span>
-        <span class="font-mono" id="costDelivery">$0</span>
-      </div>
-      <div class="flex justify-between text-[11px]" style="color: var(--charcoal-3);">
-        <span>Contingency (8%)</span>
-        <span class="font-mono" id="costContingency">$0</span>
-      </div>
-    </div>
-    <div class="flex justify-between items-baseline pt-3 border-t" style="border-color: var(--line);">
-      <span class="font-display font-semibold text-[13px]">Total estimate</span>
-      <span class="font-display font-black text-[26px]" id="costTotal" style="color: var(--accent);">$0</span>
-    </div>
-    <button class="btn btn-accent w-full justify-center mt-3" id="exportCostBtn">
-      <i class="fa-solid fa-file-arrow-down text-[11px]"></i>
-      Export full quote
-    </button>
-  </div>
-</div>
-
-<!-- EXPORT MODAL -->
-<div class="export-modal" id="exportModal" role="dialog" aria-modal="true" aria-labelledby="exportModalTitle">
-  <div class="export-sheet">
-    <div class="flex items-start justify-between mb-5">
       <div>
-        <div class="font-display font-black text-[22px] leading-tight" id="exportModalTitle">Building Layout Sheet</div>
-        <div class="text-[12px] mt-1" style="color: var(--charcoal-3);">Assembling your 2D plan, schedule, and compliance notes</div>
-      </div>
-      <button class="btn-icon btn" id="closeExport" aria-label="Close export dialog"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
-    </div>
-    
-    <div class="relative rounded-lg border mb-5 overflow-hidden" style="border-color: var(--line); background: var(--bg);">
-      <canvas id="exportCanvas" width="920" height="560" style="width: 100%; height: auto; display: block;" role="img" aria-label="Generated floor plan preview with schedule, cost breakdown and compliance stamp"></canvas>
-    </div>
-    
-    <div class="grid grid-cols-2 gap-3 mb-5">
-      <div class="space-y-1" id="exportSteps"></div>
-      <div class="space-y-1">
-        <div class="step-item">
-          <div class="step-dot done"><i class="fa-solid fa-check text-[9px]"></i></div>
-          <span>Generated by ZKR Atelier v1.0</span>
-        </div>
-        <div class="step-item">
-          <div class="step-dot done"><i class="fa-solid fa-check text-[9px]"></i></div>
-          <span class="font-mono text-[11px]">REF: AT-</span><span id="exportRef" class="font-mono text-[11px]"></span>
-        </div>
+        <h3 class="label" style="margin-bottom:14px;color:var(--accent-2);">What ZKR Atelier does</h3>
+        <p id="problem-h">A single scene is the source of truth. Placing, moving or resizing an
+          object immediately re-runs the same clearance/egress analysis that feeds the
+          Accessibility card, the 3D compliance overlay, the inspector and the exported PDF — so
+          those four views can never disagree with each other.</p>
       </div>
     </div>
-    
-    <div class="export-report">
-      <div class="export-report-title">Compliance report <span>plan with numbered findings · issues · measurements · cost · schedule</span></div>
-      <div class="flex gap-2">
-        <button class="btn flex-1 justify-center" id="downloadReportHtml"><i class="fa-solid fa-file-code text-[11px]"></i>HTML</button>
-        <button class="btn btn-accent flex-1 justify-center" id="downloadReportPdf"><i class="fa-solid fa-file-pdf text-[11px]"></i>PDF report</button>
+  </section>
+
+  <!-- CAPABILITIES -->
+  <section class="alt" id="capabilities" aria-labelledby="cap-h">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="label">Capabilities</div>
+        <h2 id="cap-h">What's actually in the workspace</h2>
+        <p>Each of these maps to a working feature in the app — not a roadmap item.</p>
+      </div>
+      <div class="cap-grid">
+        <div class="cap-card"><span class="n">01</span><h4>3D scene</h4><p>Three.js-driven real-time viewport with 3D perspective, city-overview and floor-plan camera modes.</p></div>
+        <div class="cap-card"><span class="n">02</span><h4>Spatial &amp; compliance analysis</h4><p>A single analysis pass checks fire egress, clearance and accessibility, driving the overlay, inspector and report together.</p></div>
+        <div class="cap-card"><span class="n">03</span><h4>Measurement tool</h4><p>Press <span class="mono">M</span>, click a start point, and read a live running distance as you move — measurements persist with the project.</p></div>
+        <div class="cap-card"><span class="n">04</span><h4>Contextual inspector</h4><p>One panel that adapts to what's selected — an object's properties, or a flagged clearance issue and its fix.</p></div>
+        <div class="cap-card"><span class="n">05</span><h4>Command palette</h4><p><span class="mono">Ctrl/⌘+K</span> surfaces only the actions that are actually runnable in the current mode and selection.</p></div>
+        <div class="cap-card"><span class="n">06</span><h4>Cost &amp; capacity</h4><p>Furniture subtotal, built value and seating capacity update live as the plan changes.</p></div>
+        <div class="cap-card"><span class="n">07</span><h4>Presentation mode</h4><p>A distraction-free walkthrough view for showing a layout to a client, with a single-key exit.</p></div>
+        <div class="cap-card"><span class="n">08</span><h4>PDF export</h4><p>Generates a client-ready report of the current layout and its analysis, built with jsPDF.</p></div>
+        <div class="cap-card"><span class="n">09</span><h4>Scenario templates</h4><p>Start from a set of commercial, hospitality and public-space templates instead of a blank plot.</p></div>
       </div>
     </div>
-    <div class="flex gap-2">
-      <button class="btn flex-1 justify-center" id="closeExport2">Close</button>
-      <button class="btn btn-primary flex-1 justify-center" id="downloadPdf">
-        <i class="fa-solid fa-download text-[11px]"></i>
-        Layout sheet (PDF)
-      </button>
+  </section>
+
+  <!-- PREVIEW / SCREENSHOTS -->
+  <section id="preview" aria-labelledby="preview-h">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="label">Preview</div>
+        <h2 id="preview-h">The actual workspace</h2>
+        <p>Screenshots taken directly from the application — same interface you'll land in.</p>
+      </div>
+      <div class="gallery">
+        <figure class="big">
+          <img src="verification-screenshots/01_civic_core_plaza.png" alt="Civic core plaza layout with compliance panel showing fire egress, capacity and accessibility status" loading="lazy">
+          <figcaption><span class="idx">02</span>Design-intelligence panel — live fire egress, capacity and accessibility status</figcaption>
+        </figure>
+        <figure>
+          <img src="screens/floorplan.JPG" alt="Floor plan camera mode showing a laid-out interior with dimensioned rooms" loading="lazy">
+          <figcaption><span class="idx">03</span>Floor plan mode</figcaption>
+        </figure>
+        <figure>
+          <img src="screens/cityoverview.JPG" alt="City overview camera mode showing multiple buildings and blocks" loading="lazy">
+          <figcaption><span class="idx">04</span>City overview mode</figcaption>
+        </figure>
+        <figure>
+          <img src="verification-screenshots/02_makers_yard_plaza.png" alt="Makers yard plaza scenario layout" loading="lazy">
+          <figcaption><span class="idx">05</span>Makers Yard scenario</figcaption>
+        </figure>
+        <figure>
+          <img src="verification-screenshots/04_garden_loop_plaza.png" alt="Garden loop plaza scenario layout" loading="lazy">
+          <figcaption><span class="idx">06</span>Garden Loop scenario</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- WORKFLOW -->
+  <section class="alt" id="workflow" aria-labelledby="wf-h">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="label">Workflow</div>
+        <h2 id="wf-h">How a session actually runs</h2>
+      </div>
+      <ol class="workflow">
+        <li><span class="step-n">01</span><h4>Pick a template</h4><p>Start from a scenario template or a blank plot, and set the plot dimensions.</p></li>
+        <li><span class="step-n">02</span><h4>Place &amp; arrange</h4><p>Add furniture and objects from the catalog directly into the 3D scene.</p></li>
+        <li><span class="step-n">03</span><h4>Check &amp; measure</h4><p>Read live compliance status, measure distances, and resolve flagged clearance issues.</p></li>
+        <li><span class="step-n">04</span><h4>Present &amp; export</h4><p>Switch to presentation mode for a walkthrough, then export a PDF report of the result.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- STACK -->
+  <section id="stack" aria-labelledby="stack-h">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="label">Under the hood</div>
+        <h2 id="stack-h">Technical highlights</h2>
+      </div>
+      <ul class="tech-list">
+        <li><span class="tag">ENGINE</span>Three.js real-time 3D viewport with three interchangeable camera modes.</li>
+        <li><span class="tag">LOGIC</span>A single, pure spatial-analysis function feeds every compliance surface in the app.</li>
+        <li><span class="tag">UI</span>A contextual inspector and a scoped command palette, both driven by current selection/mode.</li>
+        <li><span class="tag">EXPORT</span>Client-side PDF report generation via jsPDF — no server round-trip.</li>
+        <li><span class="tag">I18N</span>String keys throughout the interface for straightforward localization.</li>
+        <li><span class="tag">DEPLOY</span>A fully static build — no backend required to run the workspace.</li>
+      </ul>
+    </div>
+  </section>
+
+  <div class="cta-block">
+    <div class="wrap">
+      <h2>Open the workspace</h2>
+      <p>No sign-up. The current scenario loads directly into the workspace above.</p>
+      <a class="btn btn-primary" href="app.html">Enter Workspace →</a>
     </div>
   </div>
-</div>
 
-<!-- Inspector bottom sheet (≤900px): the inspector section is moved in here by inspector.js -->
-<div class="inspector-sheet" id="inspectorSheet" aria-label="Inspector sheet">
-  <div class="inspector-sheet-bar">
-    <button type="button" class="inspector-sheet-handle" data-sheet="toggle" aria-label="Expand or collapse inspector"><i class="fa-solid fa-grip-lines" aria-hidden="true"></i><span class="inspector-sheet-title">Inspector</span></button>
-    <button type="button" class="insp-icon-btn" data-sheet="close" aria-label="Close inspector"><i class="fa-solid fa-xmark" aria-hidden="true"></i></button>
-  </div>
-  <div class="inspector-sheet-body"></div>
-</div>
-
-<!-- Toast -->
-<div class="toast" id="toast" role="status" aria-live="polite"><i class="fa-solid fa-circle-info" aria-hidden="true"></i><span id="toastMsg"></span></div>
-
-<!-- Floating context toolbar: shown above the selected placed item -->
-<div class="context-toolbar" id="contextToolbar" role="toolbar" aria-label="Selected item actions">
-  <button id="ctxMove" title="Move (drag to reposition)" aria-label="Move item">
-    <i class="fa-solid fa-arrows-up-down-left-right" aria-hidden="true"></i><span>[Move]</span>
-  </button>
-  <button id="ctxRotate" title="Rotate 45°" aria-label="Rotate item">
-    <i class="fa-solid fa-arrow-rotate-right" aria-hidden="true"></i><span>[Rotate]</span>
-  </button>
-  <button id="ctxDuplicate" title="Duplicate (Ctrl/Cmd+D)" aria-label="Duplicate item">
-    <i class="fa-solid fa-clone" aria-hidden="true"></i><span>[Duplicate]</span>
-  </button>
-  <button id="ctxDelete" title="Delete (Del)" aria-label="Delete item" class="context-toolbar-danger">
-    <i class="fa-solid fa-trash" aria-hidden="true"></i><span>[Delete]</span>
-  </button>
-</div>
-<div class="dimension-label" id="dimensionLabel" aria-hidden="true"></div>
-
-<!-- Keyboard shortcuts help modal -->
-<div class="export-modal help-modal-backdrop" id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpModalTitle">
-  <div class="export-sheet help-modal-sheet">
-    <div class="flex items-center justify-between mb-3">
-      <div class="font-display font-bold text-[15px]" id="helpModalTitle">Keyboard Shortcuts</div>
-      <button class="btn btn-icon" id="closeHelp" aria-label="Close shortcuts"><i class="fa-solid fa-xmark"></i></button>
+  <footer>
+    <div class="wrap foot-row">
+      <p class="label">ZKR / Atelier — Planning Instrument</p>
+      <p class="label">Built with Three.js</p>
     </div>
-    <div class="shortcut-list">
-      <div class="shortcut-row"><span>Undo</span><span class="shortcut-keys"><kbd>Ctrl/⌘</kbd><kbd>Z</kbd></span></div>
-      <div class="shortcut-row"><span>Redo</span><span class="shortcut-keys"><kbd>Ctrl/⌘</kbd><kbd>Shift</kbd><kbd>Z</kbd></span></div>
-      <div class="shortcut-row"><span>Duplicate selected</span><span class="shortcut-keys"><kbd>Ctrl/⌘</kbd><kbd>D</kbd></span></div>
-      <div class="shortcut-row"><span>Delete selected</span><span class="shortcut-keys"><kbd>Del</kbd></span></div>
-      <div class="shortcut-row"><span>Rotate selected</span><span class="shortcut-keys"><kbd>R</kbd><span class="shortcut-alt">or</span><kbd>[</kbd><kbd>]</kbd></span></div>
-      <div class="shortcut-row"><span>Toggle grid</span><span class="shortcut-keys"><kbd>G</kbd></span></div>
-      <div class="shortcut-row"><span>Cycle view</span><span class="shortcut-keys"><kbd>V</kbd></span></div>
-      <div class="shortcut-row"><span>Toggle fire egress</span><span class="shortcut-keys"><kbd>F</kbd></span></div>
-      <div class="shortcut-row"><span>Toggle cost panel</span><span class="shortcut-keys"><kbd>C</kbd></span></div>
-      <div class="shortcut-row"><span>Select furniture</span><span class="shortcut-keys"><kbd>1</kbd><span class="shortcut-alt">–</span><kbd>9</kbd></span></div>
-      <div class="shortcut-row"><span>Command palette</span><span class="shortcut-keys"><kbd>Ctrl/⌘</kbd><kbd>K</kbd></span></div>
-      <div class="shortcut-row"><span>Inspection mode</span><span class="shortcut-keys"><kbd>I</kbd></span></div>
-      <div class="shortcut-row"><span>Presentation mode</span><span class="shortcut-keys"><kbd>P</kbd></span></div>
-      <div class="shortcut-row"><span>Compliance overlay</span><span class="shortcut-keys"><kbd>O</kbd></span></div>
-      <div class="shortcut-row"><span>Measure distance</span><span class="shortcut-keys"><kbd>M</kbd></span></div>
-      <div class="shortcut-row"><span>Cancel / deselect</span><span class="shortcut-keys"><kbd>Esc</kbd></span></div>
-    </div>
-  </div>
-</div>
-
-<div class="export-modal help-modal-backdrop" id="welcomeModal" role="dialog" aria-modal="true" aria-labelledby="welcomeModalTitle">
-  <div class="export-sheet help-modal-sheet welcome-sheet">
-    <div class="welcome-sheet-icon" aria-hidden="true"><i class="fa-solid fa-compass-drafting"></i></div>
-    <div class="font-display font-bold text-[16px] mb-2" id="welcomeModalTitle">Design the room. See it live in the city.</div>
-    <p class="welcome-copy">
-      Start by placing furniture in your café's floor plan — every piece you add
-      updates a real project score (compliance, capacity, accessibility, space
-      efficiency) in the panel on the right.
-    </p>
-    <p class="welcome-copy">
-      Then switch to <strong>City Overview</strong> and click the <strong>ZKR Atelier</strong>
-      building — that's this same café, in its neighborhood, showing that same
-      live score next to real foot traffic and time-of-day activity.
-    </p>
-    <button class="btn btn-primary welcome-cta" id="welcomeDismiss">Start designing<i class="fa-solid fa-arrow-right" aria-hidden="true"></i></button>
-  </div>
-</div>
-
-<script type="module" src="js/app.js"></script>
-<script type="module" src="js/ui-enhancements.js"></script>
+  </footer>
+</main>
 
 </body>
 </html>

@@ -3,15 +3,15 @@
    Overrides the root custom properties only; every component that
    already reads var(--accent)/var(--accent-2)/var(--accent-rgb)
    picks this up automatically with zero further edits. Contrast
-   checked: #0B7A86 on white = 5.07:1 (passes WCAG AA for the
+   checked: #0449D1 on white = 5.07:1 (passes WCAG AA for the
    button-text use case var(--accent-2) already serves).
    ============================================================ */
 :root {
-  --accent: #17B6C4;
-  --accent-rgb: 23, 182, 196;
-  --accent-2: #0B7A86;
-  --accent-soft: rgba(23, 182, 196, 0.14);
-  --accent-glow: rgba(23, 182, 196, 0.40);
+  --accent: #2690D8;
+  --accent-rgb: 38, 144, 216;
+  --accent-2: #0449D1;
+  --accent-soft: rgba(38, 144, 216, 0.14);
+  --accent-glow: rgba(38, 144, 216, 0.40);
 }
 /* A handful of spots hard-coded the old terracotta hex instead of the
    variable (chrome elements added across earlier passes) — pick those up
@@ -89,7 +89,7 @@
   border: none; border-bottom: 1px solid var(--line-soft);
   background:
     radial-gradient(circle at 30% 30%, rgba(255,255,255,0.6), transparent 60%),
-    linear-gradient(160deg, #EEF6F7, #DCEBEC);
+    linear-gradient(160deg, #EAF9EE, #DCEBEC);
   font-size: 26px; color: var(--charcoal-2);
 }
 .item-card.active .item-icon {
@@ -137,7 +137,7 @@
 .topbar-util-btn:hover { background: rgba(23,182,196,0.14); }
 .topbar-util-btn:active { transform: scale(0.92); }
 .topbar .panel-toggle { background: transparent; border-color: transparent; color: #C7CEDA; }
-.topbar .panel-toggle:hover { background: rgba(244,239,229,0.12); color: #FAF7F0; }
+.topbar .panel-toggle:hover { background: rgba(244,239,229,0.12); color: #FBFEFC; }
 #notifBtn { background: transparent; border-color: transparent; }
 #notifBtn:hover { background: rgba(244,239,229,0.12); }
 /* Hiding threshold consolidated below in the responsive section (now 1400px,
@@ -152,7 +152,7 @@
    Cost Estimate labels) kept the original dark color and became
    effectively invisible. Fixing at the source rather than per-button. */
 .topbar .btn:not(.btn-primary):not(.btn-accent) { color: #C7CEDA; }
-.topbar .btn:not(.btn-primary):not(.btn-accent):hover { color: #FAF7F0; }
+.topbar .btn:not(.btn-primary):not(.btn-accent):hover { color: #FBFEFC; }
 .topbar .nav-action.btn-primary span { color: inherit; }
 
 /* ---------- Logo mark: subtle life on hover ---------- */
@@ -181,7 +181,7 @@
 .icon-rail-btn[data-tip]::after {
   content: attr(data-tip);
   position: absolute; left: calc(100% + 10px); top: 50%; transform: translateY(-50%) translateX(-4px);
-  background: #12243A; color: #F4F0E7; font-family: 'Manrope', sans-serif;
+  background: #0A1B33; color: #F2FBF3; font-family: 'Manrope', sans-serif;
   font-size: 10.5px; font-weight: 600; letter-spacing: 0.02em;
   padding: 5px 9px; border-radius: 6px; white-space: nowrap;
   box-shadow: 0 6px 16px rgba(4,10,19,0.35);
@@ -198,7 +198,7 @@
 .icon-rail-btn { position: relative; }
 .icon-rail-btn.active::before {
   content: ''; position: absolute; left: -10px; top: 50%; transform: translateY(-50%);
-  width: 3px; height: 18px; border-radius: 0 3px 3px 0; background: var(--accent, #17B6C4);
+  width: 3px; height: 18px; border-radius: 0 3px 3px 0; background: var(--accent, #2690D8);
 }
 .icon-rail-btn:active { transform: scale(0.92); }
 
@@ -216,10 +216,10 @@
 
 /* ---------- Lighting presets: read as a mood picker, not a form grid ---------- */
 .light-preset-btn { position: relative; }
-.light-preset-btn[data-preset="night"].active, .light-preset-btn[data-preset="bluehour"].active { background: #1B2C46; border-color: #1B2C46; }
+.light-preset-btn[data-preset="night"].active, .light-preset-btn[data-preset="bluehour"].active { background: #123B7A; border-color: #123B7A; }
 .light-preset-btn[data-preset="golden"].active, .light-preset-btn[data-preset="evening"].active { background: var(--accent-2); border-color: var(--accent-2); }
 .light-preset-btn[data-preset="live"] i { color: var(--success); }
-.light-preset-btn[data-preset="live"].active i { color: #F8F5EF; }
+.light-preset-btn[data-preset="live"].active i { color: #FBFEFC; }
 
 /* ============================================================
    RIGHT PANEL — Compliance / Financial glass-card treatment
@@ -274,7 +274,7 @@
 @keyframes districtChipIn { from { transform: scale(0.94); } to { transform: scale(1); } }
 
 /* ---------- City ops / stat ribbon: small readability + hover polish ---------- */
-.city-ops button:hover i, .city-ops button.active i { color: #F4F0E7; }
+.city-ops button:hover i, .city-ops button.active i { color: #F2FBF3; }
 .city-stat-ribbon { transition: box-shadow 0.2s ease; }
 
 /* ---------- Toast: a little more presence ---------- */
