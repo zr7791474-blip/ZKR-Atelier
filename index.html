@@ -48,6 +48,17 @@
   .nav-links{display:flex; align-items:center; gap:28px; flex:none;}
   .nav-links a{font-size:12.5px; font-weight:600; color:var(--charcoal-2); text-decoration:none;}
   .nav-links a:hover{color:var(--accent-2);}
+  .nav-right{display:flex; align-items:center; gap:10px; flex:none;}
+  .nav-toggle{
+    display:none; flex:none; width:36px; height:32px; padding:0; border:1px solid var(--line);
+    background:var(--surface); border-radius:3px; cursor:pointer;
+    flex-direction:column; align-items:center; justify-content:center; gap:5px;
+  }
+  .nav-toggle span{display:block; width:16px; height:1.5px; background:var(--ink); transition:transform .18s ease, opacity .18s ease;}
+  .nav-toggle[aria-expanded="true"] span:nth-child(1){transform:translateY(6.5px) rotate(45deg);}
+  .nav-toggle[aria-expanded="true"] span:nth-child(2){opacity:0;}
+  .nav-toggle[aria-expanded="true"] span:nth-child(3){transform:translateY(-6.5px) rotate(-45deg);}
+  .nav-toggle:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
   .btn{
     display:inline-flex; align-items:center; gap:8px; font-weight:700; font-size:13px;
     padding:10px 18px; border-radius:3px; border:1px solid transparent; cursor:pointer;
@@ -60,6 +71,27 @@
   .btn-primary:focus-visible, a:focus-visible, button:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
   .btn-ghost{border-color:var(--charcoal-2); color:var(--charcoal-2); background:transparent;}
   .btn-ghost:hover{border-color:var(--accent-2); color:var(--accent-2);}
+
+  /* mobile menu — same design language as the rest of the site: hairline rules, mono index, existing button */
+  .mobile-menu{
+    position:fixed; top:64px; left:0; right:0; z-index:49;
+    background:var(--bg); border-bottom:1px solid var(--line);
+    display:flex; flex-direction:column; padding:6px clamp(16px,4.5vw,28px) 20px;
+    max-height:calc(100vh - 64px); overflow-y:auto;
+    transform:translateY(-8px); opacity:0; visibility:hidden;
+    transition:transform .18s ease, opacity .18s ease;
+  }
+  .mobile-menu.is-open{transform:translateY(0); opacity:1; visibility:visible;}
+  .mobile-menu-link{
+    display:flex; align-items:center; justify-content:space-between; gap:16px;
+    padding:18px 2px; border-bottom:1px solid var(--line); text-decoration:none;
+    font-size:16px; font-weight:700; color:var(--ink); min-height:44px;
+  }
+  .mobile-menu-idx{font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:500; color:var(--charcoal-3);}
+  .mobile-menu-cta{margin-top:18px; width:100%; justify-content:center; padding:14px 18px; font-size:14px;}
+  @media (prefers-reduced-motion: reduce){
+    .mobile-menu{transition:none;}
+  }
 
   /* ---------- HERO ---------- */
   .hero{padding:clamp(96px,20vw,150px) 0 clamp(48px,10vw,90px); position:relative;}
@@ -83,12 +115,12 @@
   .hero-meta .m-lbl{font-size:10.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--charcoal-3); margin-top:3px;}
 
   .hero-frame{margin-top:clamp(40px,8vw,64px);}
-  .hero-shot{position:relative;}
+  .hero-shot{position:relative; overflow:hidden;}
   .hero-shot::before{
     content:''; position:absolute; left:5%; right:5%; top:16px; bottom:-14px;
     background:var(--ink); opacity:.06; filter:blur(24px); z-index:-1; border-radius:4px;
   }
-  .hero-frame img{width:100%; border:1px solid var(--line); border-radius:3px; box-shadow:0 1px 2px rgba(var(--ink-rgb),.06), 0 10px 22px -16px rgba(var(--ink-rgb),.2);}
+  .hero-frame img{width:100%; display:block; border:1px solid var(--line); border-radius:3px; box-shadow:0 1px 2px rgba(var(--ink-rgb),.06), 0 10px 22px -16px rgba(var(--ink-rgb),.2);}
   .hero-frame figcaption{margin-top:12px; font-size:11.5px; color:var(--charcoal-3);}
   .hero-frame figcaption .idx{font-family:'IBM Plex Mono',monospace; color:var(--accent-2); margin-right:8px;}
 
@@ -125,10 +157,10 @@
   .spec-strip span b{color:var(--accent-2); font-weight:600;}
 
   /* gallery */
-  .gallery{display:grid; grid-template-columns:1.4fr 1fr; grid-auto-rows:clamp(150px,32vw,230px); gap:2px; background:var(--line); border:1px solid var(--line);}
-  .gallery figure{margin:0; background:var(--surface); overflow:hidden; position:relative;}
+  .gallery{display:grid; grid-template-columns:1.4fr 1fr; grid-auto-rows:clamp(170px,34vw,240px); gap:2px; background:var(--line); border:1px solid var(--line);}
+  .gallery figure{margin:0; background:#0d1b2e; overflow:hidden; position:relative;}
   .gallery figure.big{grid-row:span 2;}
-  .gallery img{width:100%; height:100%; object-fit:cover; display:block;}
+  .gallery img{width:100%; height:100%; object-fit:contain; display:block;}
   .gallery figcaption{
     position:absolute; left:0; right:0; bottom:0; padding:12px 14px;
     background:linear-gradient(0deg,rgba(var(--ink-rgb),.82),transparent);
@@ -164,6 +196,10 @@
   .foot-row{display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px;}
   .foot-row .label{margin:0;}
 
+  @media (max-width:700px){
+    .hero-shot{aspect-ratio:5/4;}
+    .hero-shot img{width:100%; height:100%; object-fit:cover; object-position:56% 58%;}
+  }
   @media (max-width:920px){
     .split{grid-template-columns:1fr; gap:34px;}
     .cap-layout{grid-template-columns:1fr; gap:0;}
@@ -171,6 +207,10 @@
     .gallery{grid-template-columns:1fr;}
     .gallery figure.big{grid-row:auto;}
     .nav-links{display:none;}
+    .nav-toggle{display:flex;}
+  }
+  @media (min-width:921px){
+    .mobile-menu{display:none;}
   }
   @media (max-width:560px){
     .hero-cta{gap:12px;}
@@ -210,8 +250,20 @@
     <a href="#preview">Preview</a>
     <a href="#workflow">Workflow</a>
   </div>
-  <a class="btn btn-primary" href="app.html">Enter Workspace</a>
+  <div class="nav-right">
+    <a class="btn btn-primary" href="app.html">Enter Workspace</a>
+    <button type="button" class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="mobileMenu" aria-label="Open menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
 </nav>
+
+<div class="mobile-menu" id="mobileMenu" hidden>
+  <a href="#capabilities" class="mobile-menu-link"><span>Capabilities</span><span class="mobile-menu-idx">01</span></a>
+  <a href="#preview" class="mobile-menu-link"><span>Preview</span><span class="mobile-menu-idx">02</span></a>
+  <a href="#workflow" class="mobile-menu-link"><span>Workflow</span><span class="mobile-menu-idx">03</span></a>
+  <a href="app.html" class="btn btn-primary mobile-menu-cta">Enter Workspace →</a>
+</div>
 
 <main id="top">
   <header class="hero">
@@ -381,5 +433,49 @@
   </footer>
 </main>
 
+<script>
+(function(){
+  var toggle = document.getElementById('navToggle');
+  var menu = document.getElementById('mobileMenu');
+  if(!toggle || !menu) return;
+
+  function openMenu(){
+    menu.hidden = false;
+    requestAnimationFrame(function(){ menu.classList.add('is-open'); });
+    toggle.setAttribute('aria-expanded','true');
+    toggle.setAttribute('aria-label','Close menu');
+  }
+  function closeMenu(){
+    menu.classList.remove('is-open');
+    toggle.setAttribute('aria-expanded','false');
+    toggle.setAttribute('aria-label','Open menu');
+    setTimeout(function(){ if(!menu.classList.contains('is-open')) menu.hidden = true; }, 200);
+  }
+  function isOpen(){ return toggle.getAttribute('aria-expanded') === 'true'; }
+
+  toggle.addEventListener('click', function(e){
+    e.stopPropagation();
+    isOpen() ? closeMenu() : openMenu();
+  });
+
+  menu.querySelectorAll('a').forEach(function(link){
+    link.addEventListener('click', closeMenu);
+  });
+
+  document.addEventListener('click', function(e){
+    if(isOpen() && !menu.contains(e.target) && e.target !== toggle && !toggle.contains(e.target)){
+      closeMenu();
+    }
+  });
+
+  document.addEventListener('keydown', function(e){
+    if(e.key === 'Escape' && isOpen()) closeMenu();
+  });
+
+  window.addEventListener('resize', function(){
+    if(window.innerWidth > 920 && isOpen()) closeMenu();
+  });
+})();
+</script>
 </body>
 </html>
