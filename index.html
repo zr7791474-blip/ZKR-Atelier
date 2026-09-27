@@ -50,7 +50,7 @@
   .nav-links a:hover{color:var(--accent-2);}
   .nav-right{display:flex; align-items:center; gap:10px; flex:none;}
   .nav-toggle{
-    display:none; flex:none; width:36px; height:32px; padding:0; border:1px solid var(--line);
+    display:none; flex:none; width:44px; height:44px; padding:0; border:1px solid var(--line);
     background:var(--surface); border-radius:3px; cursor:pointer;
     flex-direction:column; align-items:center; justify-content:center; gap:5px;
   }
@@ -189,8 +189,10 @@
   .cta-row > div{min-width:0;}
   .cta-row h2{font-size:clamp(22px,3vw,30px); font-weight:800; letter-spacing:-0.03em; margin:0 0 8px; text-wrap:balance;}
   .cta-row p{color:var(--ink-muted); font-size:13.5px; margin:0; max-width:40ch;}
-  .cta-row .btn-primary{background:var(--accent); flex:none;}
-  .cta-row .btn-primary:hover{background:var(--mint); color:var(--ink);}
+  .cta-row .btn-primary{background:var(--accent-2); flex:none;}
+  .cta-row .btn-primary:hover{background:#033a9e;}
+  .cta-row .btn-primary:active{background:#022c7a;}
+  .cta-row .btn-primary:focus-visible{outline:2px solid var(--mint); outline-offset:2px;}
 
   footer{padding:clamp(24px,5vw,34px) 0; border-top:1px solid var(--line);}
   .foot-row{display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px;}
@@ -239,7 +241,12 @@
 
 <nav class="nav">
   <a href="#top" class="nav-brand" aria-label="ZKR Atelier home">
-    <span class="nav-logo"><img src="public/logo/zkr.jpg" alt="ZKR logo" width="30" height="30"></span>
+    <span class="nav-logo">
+      <picture>
+        <source srcset="public/logo/optimized/zkr-88.webp" type="image/webp">
+        <img src="public/logo/optimized/zkr-88.jpg" alt="ZKR logo" width="30" height="30">
+      </picture>
+    </span>
     <span>
       <span class="nav-word" style="display:block;">ZKR / ATELIER</span>
       <span class="nav-sub">Planning Instrument</span>
@@ -293,7 +300,10 @@
 
       <figure class="hero-frame reveal">
         <div class="hero-shot">
-          <img src="screens/3dperspective.JPG" alt="ZKR Atelier 3D perspective view of a city block with buildings, a live inspector panel and analytics sidebar" width="1920" height="947" loading="eager">
+          <picture>
+            <source type="image/webp" srcset="screens/optimized/3dperspective-480.webp 480w, screens/optimized/3dperspective-768.webp 768w, screens/optimized/3dperspective-1200.webp 1200w, screens/optimized/3dperspective-1920.webp 1920w" sizes="(max-width: 700px) 100vw, 1132px">
+            <img src="screens/optimized/3dperspective-1920.jpg" srcset="screens/optimized/3dperspective-480.jpg 480w, screens/optimized/3dperspective-768.jpg 768w, screens/optimized/3dperspective-1200.jpg 1200w, screens/optimized/3dperspective-1920.jpg 1920w" sizes="(max-width: 700px) 100vw, 1132px" alt="ZKR Atelier 3D perspective view of a city block with buildings, a live inspector panel and analytics sidebar" width="1920" height="947" loading="eager" fetchpriority="high" decoding="async">
+          </picture>
         </div>
         <figcaption><span class="idx">01 / 3D PERSPECTIVE</span>Real-time scene — floor area, capacity and compliance readouts update as the layout changes.</figcaption>
       </figure>
@@ -375,23 +385,38 @@
       </div>
       <div class="gallery">
         <figure class="big">
-          <img src="verification-screenshots/01_civic_core_plaza.png" alt="Civic core plaza layout with compliance panel showing fire egress, capacity and accessibility status" loading="lazy">
+          <picture>
+            <source type="image/webp" srcset="verification-screenshots/optimized/civic_core_plaza-480.webp 480w, verification-screenshots/optimized/civic_core_plaza-768.webp 768w, verification-screenshots/optimized/civic_core_plaza-1200.webp 1200w, verification-screenshots/optimized/civic_core_plaza-1440.webp 1440w" sizes="(max-width: 920px) 100vw, 55vw">
+            <img src="verification-screenshots/optimized/civic_core_plaza-1440.jpg" srcset="verification-screenshots/optimized/civic_core_plaza-480.jpg 480w, verification-screenshots/optimized/civic_core_plaza-768.jpg 768w, verification-screenshots/optimized/civic_core_plaza-1200.jpg 1200w, verification-screenshots/optimized/civic_core_plaza-1440.jpg 1440w" sizes="(max-width: 920px) 100vw, 55vw" alt="Civic core plaza layout with compliance panel showing fire egress, capacity and accessibility status" width="1440" height="900" loading="lazy" decoding="async">
+          </picture>
           <figcaption><span class="idx">02</span>Design-intelligence panel — live fire egress, capacity and accessibility status</figcaption>
         </figure>
         <figure>
-          <img src="screens/floorplan.JPG" alt="Floor plan camera mode showing a laid-out interior with dimensioned rooms" loading="lazy">
+          <picture>
+            <source type="image/webp" srcset="screens/optimized/floorplan-480.webp 480w, screens/optimized/floorplan-768.webp 768w, screens/optimized/floorplan-1200.webp 1200w, screens/optimized/floorplan-1918.webp 1918w" sizes="(max-width: 920px) 100vw, 42vw">
+            <img src="screens/optimized/floorplan-1918.jpg" srcset="screens/optimized/floorplan-480.jpg 480w, screens/optimized/floorplan-768.jpg 768w, screens/optimized/floorplan-1200.jpg 1200w, screens/optimized/floorplan-1918.jpg 1918w" sizes="(max-width: 920px) 100vw, 42vw" alt="Floor plan camera mode showing a laid-out interior with dimensioned rooms" width="1918" height="941" loading="lazy" decoding="async">
+          </picture>
           <figcaption><span class="idx">03</span>Floor plan mode</figcaption>
         </figure>
         <figure>
-          <img src="screens/cityoverview.JPG" alt="City overview camera mode showing multiple buildings and blocks" loading="lazy">
+          <picture>
+            <source type="image/webp" srcset="screens/optimized/cityoverview-480.webp 480w, screens/optimized/cityoverview-768.webp 768w, screens/optimized/cityoverview-1200.webp 1200w, screens/optimized/cityoverview-1920.webp 1920w" sizes="(max-width: 920px) 100vw, 42vw">
+            <img src="screens/optimized/cityoverview-1920.jpg" srcset="screens/optimized/cityoverview-480.jpg 480w, screens/optimized/cityoverview-768.jpg 768w, screens/optimized/cityoverview-1200.jpg 1200w, screens/optimized/cityoverview-1920.jpg 1920w" sizes="(max-width: 920px) 100vw, 42vw" alt="City overview camera mode showing multiple buildings and blocks" width="1920" height="954" loading="lazy" decoding="async">
+          </picture>
           <figcaption><span class="idx">04</span>City overview mode</figcaption>
         </figure>
         <figure>
-          <img src="verification-screenshots/02_makers_yard_plaza.png" alt="Makers yard plaza scenario layout" loading="lazy">
+          <picture>
+            <source type="image/webp" srcset="verification-screenshots/optimized/makers_yard_plaza-480.webp 480w, verification-screenshots/optimized/makers_yard_plaza-768.webp 768w, verification-screenshots/optimized/makers_yard_plaza-1200.webp 1200w, verification-screenshots/optimized/makers_yard_plaza-1440.webp 1440w" sizes="(max-width: 920px) 100vw, 42vw">
+            <img src="verification-screenshots/optimized/makers_yard_plaza-1440.jpg" srcset="verification-screenshots/optimized/makers_yard_plaza-480.jpg 480w, verification-screenshots/optimized/makers_yard_plaza-768.jpg 768w, verification-screenshots/optimized/makers_yard_plaza-1200.jpg 1200w, verification-screenshots/optimized/makers_yard_plaza-1440.jpg 1440w" sizes="(max-width: 920px) 100vw, 42vw" alt="Makers yard plaza scenario layout" width="1440" height="900" loading="lazy" decoding="async">
+          </picture>
           <figcaption><span class="idx">05</span>Makers Yard scenario</figcaption>
         </figure>
         <figure>
-          <img src="verification-screenshots/04_garden_loop_plaza.png" alt="Garden loop plaza scenario layout" loading="lazy">
+          <picture>
+            <source type="image/webp" srcset="verification-screenshots/optimized/garden_loop_plaza-480.webp 480w, verification-screenshots/optimized/garden_loop_plaza-768.webp 768w, verification-screenshots/optimized/garden_loop_plaza-1200.webp 1200w, verification-screenshots/optimized/garden_loop_plaza-1440.webp 1440w" sizes="(max-width: 920px) 100vw, 42vw">
+            <img src="verification-screenshots/optimized/garden_loop_plaza-1440.jpg" srcset="verification-screenshots/optimized/garden_loop_plaza-480.jpg 480w, verification-screenshots/optimized/garden_loop_plaza-768.jpg 768w, verification-screenshots/optimized/garden_loop_plaza-1200.jpg 1200w, verification-screenshots/optimized/garden_loop_plaza-1440.jpg 1440w" sizes="(max-width: 920px) 100vw, 42vw" alt="Garden loop plaza scenario layout" width="1440" height="900" loading="lazy" decoding="async">
+          </picture>
           <figcaption><span class="idx">06</span>Garden Loop scenario</figcaption>
         </figure>
       </div>

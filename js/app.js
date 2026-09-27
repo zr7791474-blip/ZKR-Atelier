@@ -3009,7 +3009,7 @@ function updateFloorPlanLabels() {
   if (state.view !== 'top') return;
   fpWidthLabel.textContent = ROOM_W.toFixed(1) + ' m';
   fpDepthLabel.textContent = ROOM_D.toFixed(1) + ' m';
-  const roomName = (document.getElementById('projectName')?.textContent.trim() || '').toUpperCase();
+  const roomName = (projectNameEl?.textContent.trim() || '').toUpperCase();
   fpRoomNameLabel.textContent = roomName;
   fpRoomNameLabel.style.visibility = roomName ? 'visible' : 'hidden'; // missing metadata → skip, don't show an empty chip
   const w = projectToScreen(0, 0.02, ROOM_D / 2 + 0.6);
@@ -3737,7 +3737,7 @@ function loadTemplate(name) {
   tpl.build();
   suppressHistory = false;
 
-  document.getElementById('projectName').textContent = tpl.label + ' Concept';
+  projectNameEl.textContent = tpl.label + ' Concept';
   document.getElementById('templateBadge').textContent = tpl.label;
   document.getElementById('areaStat').innerHTML = `${state.roomArea} m² <span class="font-mono text-[10px] font-normal" style="color: var(--charcoal-3);">/ ${tpl.area.toLocaleString()} ft²</span>`;
   document.getElementById('areaStatSmall').textContent = state.roomArea + ' m²';
@@ -4169,7 +4169,7 @@ document.querySelectorAll('.swatch').forEach(swatch => {
 function updateBreadcrumb() {
   const trail = document.getElementById('breadcrumbTrail');
   if (!trail) return;
-  const projectName = document.getElementById('projectName')?.textContent.trim() || 'Untitled Project';
+  const projectName = projectNameEl?.textContent.trim() || 'Untitled Project';
   const district = 'CANAL QUARTER';
   let viewLabel = t('breadcrumb.workspace');
   if (state.view === 'city') viewLabel = t('breadcrumb.city');
@@ -5079,7 +5079,7 @@ function flashSaveStatus() {
 }
 function saveProjectToStorage() {
   try {
-    const nameEl = document.getElementById('projectName');
+    const nameEl = projectNameEl;
     const data = {
       projectName: nameEl ? nameEl.textContent.trim() : 'Untitled Project',
       template: state.template,
@@ -5116,7 +5116,7 @@ function loadProjectFromStorage() {
     });
     suppressHistory = false;
   }
-  const nameEl = document.getElementById('projectName');
+  const nameEl = projectNameEl;
   if (nameEl && data.projectName) nameEl.textContent = data.projectName;
   if (data.brandColor) {
     document.getElementById('brandColor').value = data.brandColor;
@@ -5611,7 +5611,7 @@ const workspaceFrame = initWorkspace({
   setCityScale, transitionToView, toggleGrid, toggleFireSafety, toggleCostPanel, enterFirstPerson, exitFirstPerson,
   openExportModal, openHelpModal, clearIssue,
   closeDrawers: () => { setPanelOpen(leftPanelEl, leftPanelToggle, false); setPanelOpen(rightPanelEl, rightPanelToggle, false); },
-  getProjectName: () => document.getElementById('projectName').textContent.trim() || 'Untitled Project',
+  getProjectName: () => projectNameEl.textContent.trim() || 'Untitled Project',
   getExportRef,
 });
 ws.ctx.measure.restore(state.pendingMeasurements);
