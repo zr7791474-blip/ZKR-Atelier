@@ -10,6 +10,9 @@
   --accent: #2690D8;
   --accent-rgb: 38, 144, 216;
   --accent-2: #0449D1;
+  --accent-btn: #0449D1;
+  --accent-btn-hover: #033a9e;
+  --accent-btn-active: #022c7a;
   --accent-soft: rgba(38, 144, 216, 0.14);
   --accent-glow: rgba(38, 144, 216, 0.40);
 }
@@ -136,7 +139,7 @@
 .topbar-util-btn { width: 28px; height: 28px; border-radius: 6px; background: transparent; border-color: transparent; }
 .topbar-util-btn:hover { background: rgba(23,182,196,0.14); }
 .topbar-util-btn:active { transform: scale(0.92); }
-.topbar .panel-toggle { background: transparent; border-color: transparent; color: #C7CEDA; }
+.topbar .panel-toggle { min-width: 44px; min-height: 44px; width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; background: transparent; border-color: transparent; color: #C7CEDA; }
 .topbar .panel-toggle:hover { background: rgba(244,239,229,0.12); color: #FBFEFC; }
 #notifBtn { background: transparent; border-color: transparent; }
 #notifBtn:hover { background: rgba(244,239,229,0.12); }

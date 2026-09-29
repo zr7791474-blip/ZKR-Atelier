@@ -12,6 +12,19 @@ import { MIN_ACCESSIBLE_CLEARANCE, COLLISION_BUFFER, NON_FLOOR_TYPES, analyzeLay
 import { ws, clearIssue } from './ws.js';
 import { initWorkspace } from './workspace.js';
 
+// ========== DOM QUERY CACHE ==========
+// Caches frequently queried DOM elements so user interaction and update loops
+// avoid repeated document.getElementById traversals.
+const _domCache = new Map();
+function getEl(id) {
+  let el = _domCache.get(id);
+  if (!el) {
+    el = document.getElementById(id);
+    if (el) _domCache.set(id, el);
+  }
+  return el;
+}
+
 // ========== MATERIAL LIBRARY ==========
 // One shared, named set of materials so every factory draws from the same
 // palette instead of hand-rolling roughness/metalness values inconsistently.
@@ -264,8 +277,8 @@ function enterFirstPerson() {
   camera.position.set(controls.target.x, 1.65, controls.target.z + 3);
   camera.fov = 62; // wider FOV reads as "walking through a space" vs the tighter framing camera used for orbit/plan views
   camera.updateProjectionMatrix();
-  document.getElementById('firstPersonBtn')?.classList.add('active');
-  document.getElementById('canvasContainer')?.classList.add('fp-active');
+  getEl('firstPersonBtn')?.classList.add('active');
+  container?.classList.add('fp-active');
   fpControls.lock();
 }
 
@@ -281,8 +294,8 @@ function exitFirstPerson() {
   controls.target.copy(_fpSaved.target);
   controls.enabled = _fpSaved.orbitEnabled;
   controls.update();
-  document.getElementById('firstPersonBtn')?.classList.remove('active');
-  document.getElementById('canvasContainer')?.classList.remove('fp-active');
+  getEl('firstPersonBtn')?.classList.remove('active');
+  container?.classList.remove('fp-active');
   if (document.pointerLockElement === renderer.domElement) document.exitPointerLock();
 }
 
@@ -2063,7 +2076,7 @@ function constructCityBuilding(plot, key = state.cityBuildType) {
   plot.occupied = true;
   plot.mesh.visible = false; plot.outline.visible = false;
   state.cityBuildMode = false;
-  document.getElementById('cityBuildBtn').classList.remove('active');
+  getEl('cityBuildBtn')?.classList.remove('active');
   updateCityInterface();
   selectCityEntity(building.userData.cityEntity);
   showToast(`${spec.label} commissioned at ${plot.id}`, 'fa-building');
@@ -2113,7 +2126,7 @@ function deselectCityEntity() {
   citySelectionAnchor = null;
   disposeSelectionMarker(citySelectionHelper);
   citySelectionHelper = null;
-  document.getElementById('citySelectionCard').classList.remove('active');
+  getEl('citySelectionCard')?.classList.remove('active');
 }
 document.getElementById('closeCitySelection').addEventListener('click', (e) => {
   e.stopPropagation();
@@ -2130,7 +2143,7 @@ function selectCityEntity(entity) {
   scene.add(citySelectionHelper);
   const isPerson = entity.kind === 'person';
   const isAtelier = entity.name === 'ZKR Atelier';
-  document.getElementById('citySelectionCard').classList.add('active');
+  getEl('citySelectionCard')?.classList.add('active');
   document.getElementById('citySelectionName').textContent = entity.name;
   document.getElementById('citySelectionMeta').textContent = isPerson ? `${entity.role.toUpperCase()} / ${entity.district.toUpperCase()} / ${entity.status.toUpperCase()}` : `${entity.type.toUpperCase()} / ${entity.district.toUpperCase()} / ${entity.status.toUpperCase()}`;
   document.getElementById('citySelectionDetail').innerHTML = isPerson
@@ -2159,7 +2172,8 @@ function updateCityInterface() {
   document.getElementById('panelValue').textContent = `$${Math.round(value / 1000000)}M`;
   document.getElementById('panelTraffic').textContent = `${cityTraffic.length + cars.length}`;
   document.getElementById('panelCycle').textContent = night ? 'Night' : 'Day';
-  document.getElementById('cityPhase').textContent = night ? 'NIGHT / LIT' : 'DAY / ACTIVE';
+  const cityPhaseEl = getEl('cityPhase');
+  if (cityPhaseEl) cityPhaseEl.textContent = night ? 'NIGHT / LIT' : 'DAY / ACTIVE';
   const hours = Math.floor(state.cityTime) % 24;
   const minutes = Math.floor((state.cityTime % 1) * 60).toString().padStart(2, '0');
   document.getElementById('cityClock').textContent = `${hours.toString().padStart(2, '0')}:${minutes}`;
@@ -3445,8 +3459,10 @@ function pushHistory(entry) {
   flashSaveStatus();
 }
 function updateHistoryButtons() {
-  document.getElementById('undoBtn').disabled = undoStack.length === 0;
-  document.getElementById('redoBtn').disabled = redoStack.length === 0;
+  const undoBtn = getEl('undoBtn');
+  const redoBtn = getEl('redoBtn');
+  if (undoBtn) undoBtn.disabled = undoStack.length === 0;
+  if (redoBtn) redoBtn.disabled = redoStack.length === 0;
 }
 function applyItemRotation(id, rotation) {
   const placed = state.placedItems.find(i => i.id === id);

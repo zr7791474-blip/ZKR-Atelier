@@ -50,7 +50,7 @@
   .nav-links a:hover{color:var(--accent-2);}
   .nav-right{display:flex; align-items:center; gap:10px; flex:none;}
   .nav-toggle{
-    display:none; flex:none; width:44px; height:44px; padding:0; border:1px solid var(--line);
+    display:none; flex:none; width:44px; height:44px; min-width:44px; min-height:44px; padding:0; border:1px solid var(--line);
     background:var(--surface); border-radius:3px; cursor:pointer;
     flex-direction:column; align-items:center; justify-content:center; gap:5px;
   }
@@ -194,7 +194,13 @@
   .cta-row .btn-primary:active{background:#022c7a;}
   .cta-row .btn-primary:focus-visible{outline:2px solid var(--mint); outline-offset:2px;}
 
-  footer{padding:clamp(24px,5vw,34px) 0; border-top:1px solid var(--line);}
+  .site-footer{padding:clamp(36px,6vw,56px) 0 clamp(24px,4vw,36px); border-top:1px solid var(--line); background:var(--surface);}
+  .foot-colophon{display:grid; grid-template-columns:1.35fr 1fr 1fr; gap:36px clamp(24px,4vw,48px);}
+  .foot-desc{font-size:13px; line-height:1.65; color:var(--charcoal-3); margin:12px 0 0; max-width:44ch;}
+  .foot-list{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:8px;}
+  .foot-list li{font-size:12px; color:var(--charcoal-2); display:flex; justify-content:space-between; gap:12px; border-bottom:1px dashed var(--line-soft); padding-bottom:6px;}
+  .foot-list li b{color:var(--ink); font-weight:600;}
+  .foot-list li .mono{font-size:11px; color:var(--accent-2); font-weight:600;}
   .foot-row{display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px;}
   .foot-row .label{margin:0;}
 
@@ -223,8 +229,16 @@
     .cta-row{flex-direction:column; align-items:flex-start; text-align:left;}
     .cta-row .btn-primary{width:100%; justify-content:center;}
   }
+  @media (max-width:820px){
+    .foot-colophon{grid-template-columns:1fr; gap:28px;}
+  }
   @media (max-width:380px){
     .nav-sub{display:none;}
+  }
+  @media (max-width:360px){
+    .nav{padding:0 10px; gap:8px;}
+    .nav-right{gap:6px;}
+    .nav .btn-primary{padding:7px 10px; font-size:11px;}
   }
   @media (prefers-reduced-motion: reduce){
     html{scroll-behavior:auto;}
@@ -450,10 +464,41 @@
     </div>
   </div>
 
-  <footer>
-    <div class="wrap foot-row">
-      <p class="label">ZKR / Atelier — Planning Instrument</p>
-      <p class="label">Built with Three.js</p>
+  <footer class="site-footer">
+    <div class="wrap">
+      <div class="foot-colophon">
+        <div>
+          <span class="nav-word" style="font-size:15px; display:block;">ZKR / ATELIER</span>
+          <span class="label" style="display:block; margin-top:3px;">Architectural Planning Instrument</span>
+          <p class="foot-desc">
+            A real-time 3D spatial planning instrument for laying out commercial interiors,
+            verifying spatial compliance and fire egress, measuring clearances, and generating client-ready
+            PDF reports — all directly in the browser without leaving the scene.
+          </p>
+        </div>
+        <div>
+          <div class="label" style="margin-bottom:12px;">Architecture &amp; Engine</div>
+          <ul class="foot-list">
+            <li><span>3D Engine:</span> <b>Three.js WebGL</b></li>
+            <li><span>Spatial Logic:</span> <b>Deterministic rules</b></li>
+            <li><span>Report Export:</span> <b>Client-side jsPDF</b></li>
+            <li><span>Telemetry:</span> <b>Local-first / Zero tracking</b></li>
+          </ul>
+        </div>
+        <div>
+          <div class="label" style="margin-bottom:12px;">Workspace Controls</div>
+          <ul class="foot-list">
+            <li><span class="mono">⌘ / Ctrl + K</span> <span>Command palette</span></li>
+            <li><span class="mono">M</span> <span>Measure distance</span></li>
+            <li><span class="mono">F</span> <span>Fire egress toggle</span></li>
+            <li><span class="mono">Esc</span> <span>Presentation mode</span></li>
+          </ul>
+        </div>
+      </div>
+      <div class="foot-row" style="margin-top:32px; padding-top:20px; border-top:1px solid var(--line);">
+        <p class="label">ZKR / Atelier — Spatial Planning Instrument</p>
+        <p class="label">Pure WebGL &amp; ES Modules · No backend required</p>
+      </div>
     </div>
   </footer>
 </main>
@@ -494,7 +539,26 @@
   });
 
   document.addEventListener('keydown', function(e){
-    if(e.key === 'Escape' && isOpen()) closeMenu();
+    if(e.key === 'Escape' && isOpen()){
+      closeMenu();
+      toggle.focus();
+    }
+  });
+
+  menu.addEventListener('keydown', function(e){
+    if(e.key === 'Tab' && isOpen()){
+      var focusables = menu.querySelectorAll('a, button');
+      if(!focusables.length) return;
+      var first = focusables[0];
+      var last = focusables[focusables.length - 1];
+      if(e.shiftKey && document.activeElement === first){
+        e.preventDefault();
+        toggle.focus();
+      } else if(!e.shiftKey && document.activeElement === last){
+        e.preventDefault();
+        toggle.focus();
+      }
+    }
   });
 
   window.addEventListener('resize', function(){
